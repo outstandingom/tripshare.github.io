@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripShare - My Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary: #0D9488;
+            --primary-dark: #0f766e;
+            --secondary: #1E40AF;
+            --text: #374151;
+            --text-light: #6B7280;
+            --white: #FFFFFF;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .profile-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Profile Container */
+        .profile-container {
+            padding: 2rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 600;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .profile-avatar-edit {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid var(--white);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-email {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Profile Sections */
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .profile-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Personal Info */
+        .info-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--text-light);
+            min-width: 120px;
+        }
+
+        .info-value {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .info-edit {
+            color: var(--primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .info-edit:hover {
+            background-color: #F0FDFA;
+        }
+
+        /* Recent Trips */
+        .trip-card {
+            background: #F8FAFC;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .trip-route {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trip-details {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .trip-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-upcoming {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .no-trips {
+            text-align: center;
+            color: var(--text-light);
+            padding: 2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: #F8FAFC;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border-top: 4px solid var(--primary);
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Edit Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--white);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.8rem 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .profile-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .profile-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .trip-details {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <i class="fas fa-car"></i>
+            TripShare
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#">Create Trip</a>
+            <a href="#">My Trips</a>
+            <a href="profile.html" class="active">Profile</a>
+        </div>
+        <div class="profile-menu" id="profileMenu">
+            <div class="profile-img" id="navProfileImg">U</div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </nav>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading your profile...</p>
+        </div>
+
+        <!-- Profile Header -->
+        <div class="profile-header" id="profileHeader" style="display: none;">
+            <div class="profile-avatar" id="profileAvatar">
+                <div class="profile-avatar-edit" onclick="openEditModal('avatar')">
+                    <i class="fas fa-camera"></i>
+                </div>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name" id="profileName">Loading...</h1>
+                <p class="profile-email" id="profileEmail">Loading...</p>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="totalTrips">0</div>
+                        <div class="stat-label">Total Trips</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="userRating">5.0</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="memberSince">2023</div>
+                        <div class="stat-label">Member Since</div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="btn btn-outline" onclick="openEditModal('profile')">
+                    <i class="fas fa-edit"></i>Edit Profile
+                </button>
+                <button class="btn btn-primary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Profile Sections -->
+        <div class="profile-sections" id="profileSections" style="display: none;">
+            <!-- Personal Information -->
+            <div class="profile-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user"></i>Personal Information
+                </h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Full Name</span>
+                        <span class="info-value" id="infoFullName">-</span>
+                        <span class="info-edit" onclick="openEditModal('name')">
+                            <i class="fas fa-edit"></i>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value" id="infoEmail">-</span>
+                        <span class="info-edit" onclick="openEditModal('email')">
+                            <i class="fas fa-edit"></i>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phone</span>
+                        <span class="info-value" id="infoPhone">-</span>
+                        <span class="info-edit" onclick="openEditModal('phone')">
+                            <i class="fas fa-edit"></i>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">User ID</span>
+                        <span class="info-value" id="infoUserId">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trip Statistics -->
+            <div class="profile-section">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-bar"></i>Trip Statistics
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="statsCompleted">0</div>
+                        <div class="stat-card-label">Completed Trips</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="statsUpcoming">0</div>
+                        <div class="stat-card-label">Upcoming Trips</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="statsAsDriver">0</div>
+                        <div class="stat-card-label">As Driver</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="statsAsPassenger">0</div>
+                        <div class="stat-card-label">As Passenger</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Trips -->
+            <div class="profile-section" style="grid-column: 1 / -1;">
+                <h2 class="section-title">
+                    <i class="fas fa-road"></i>Recent Trips
+                </h2>
+                <div id="recentTrips">
+                    <div class="no-trips">
+                        <i class="fas fa-road" style="font-size: 3rem; margin-bottom: 1rem; color: #E5E7EB;"></i>
+                        <p>No recent trips found</p>
+                        <p class="text-light">Your trip history will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Edit Profile</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editForm">
+                <div class="form-group" id="nameField">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="editName" required>
+                </div>
+                <div class="form-group" id="emailField">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="editEmail" required>
+                </div>
+                <div class="form-group" id="phoneField">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-input" id="editPhone" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-search nav-icon"></i>
+            <span>Search</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-road nav-icon"></i>
+            <span>My Trips</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="profile.html" class="nav-item active">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- Include Supabase Configuration -->
+    <script src="supabase-config.js"></script>
+
+    <script>
+        let currentUser = null;
+        let userProfile = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+        });
+
+        async function checkAuthState() {
+            try {
+                const loading = document.getElementById('loading');
+                const profileHeader = document.getElementById('profileHeader');
+                const profileSections = document.getElementById('profileSections');
+
+                loading.classList.add('show');
+                
+                // Check if user is authenticated
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                
+                if (error || !user) {
+                    // Redirect to login if not authenticated
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                currentUser = user;
+                await loadUserProfile(user.id);
+                
+                loading.classList.remove('show');
+                profileHeader.style.display = 'flex';
+                profileSections.style.display = 'grid';
+
+            } catch (error) {
+                console.error('Auth check error:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        async function loadUserProfile(userId) {
+            try {
+                // Fetch user profile from profiles table
+                const { data: profile, error } = await window.supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching profile:', error);
+                    // Create profile if it doesn't exist
+                    await createUserProfile(userId);
+                    return;
+                }
+
+                userProfile = profile;
+                updateProfileUI(profile);
+                await loadUserStats(userId);
+                await loadRecentTrips(userId);
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        async function createUserProfile(userId) {
+            try {
+                const { data: user } = await window.supabaseClient.auth.getUser();
+                
+                const { data: profile, error } = await window.supabaseClient
+                    .from('profiles')
+                    .insert([
+                        {
+                            id: userId,
+                            full_name: user.user.user_metadata?.full_name || 'User',
+                            email: user.user.email,
+                            phone: user.user.user_metadata?.phone || '',
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                
+                userProfile = profile;
+                updateProfileUI(profile);
+
+            } catch (error) {
+                console.error('Error creating profile:', error);
+            }
+        }
+
+        function updateProfileUI(profile) {
+            // Update header
+            document.getElementById('profileName').textContent = profile.full_name;
+            document.getElementById('profileEmail').textContent = profile.email;
+            
+            // Update avatar
+            const avatar = document.getElementById('profileAvatar');
+            const navAvatar = document.getElementById('navProfileImg');
+            const initials = getInitials(profile.full_name);
+            
+            avatar.textContent = initials;
+            navAvatar.textContent = initials;
+            
+            // Update personal info
+            document.getElementById('infoFullName').textContent = profile.full_name;
+            document.getElementById('infoEmail').textContent = profile.email;
+            document.getElementById('infoPhone').textContent = profile.phone || 'Not provided';
+            document.getElementById('infoUserId').textContent = profile.id.substring(0, 8) + '...';
+            
+            // Update stats
+            document.getElementById('userRating').textContent = profile.rating || '5.0';
+            
+            if (profile.created_at) {
+                const memberSince = new Date(profile.created_at).getFullYear();
+                document.getElementById('memberSince').textContent = memberSince;
+            }
+        }
+
+        async function loadUserStats(userId) {
+            try {
+                // Fetch trip statistics
+                const { data: driverTrips, error: driverError } = await window.supabaseClient
+                    .from('trips')
+                    .select('id, status')
+                    .eq('driver_id', userId);
+
+                const { data: passengerTrips, error: passengerError } = await window.supabaseClient
+                    .from('bookings')
+                    .select('id, status, trips(status)')
+                    .eq('passenger_id', userId);
+
+                if (!driverError) {
+                    const completed = driverTrips.filter(trip => trip.status === 'completed').length;
+                    const upcoming = driverTrips.filter(trip => trip.status === 'active').length;
+                    
+                    document.getElementById('totalTrips').textContent = driverTrips.length;
+                    document.getElementById('statsAsDriver').textContent = driverTrips.length;
+                    document.getElementById('statsCompleted').textContent = completed;
+                    document.getElementById('statsUpcoming').textContent = upcoming;
+                }
+
+                if (!passengerError) {
+                    document.getElementById('statsAsPassenger').textContent = passengerTrips.length;
+                }
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadRecentTrips(userId) {
+            try {
+                // Fetch recent trips as driver
+                const { data: driverTrips, error: driverError } = await window.supabaseClient
+                    .from('trips')
+                    .select('*')
+                    .eq('driver_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                // Fetch recent trips as passenger
+                const { data: passengerTrips, error: passengerError } = await window.supabaseClient
+                    .from('bookings')
+                    .select('*, trips(*)')
+                    .eq('passenger_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                const recentTripsContainer = document.getElementById('recentTrips');
+                
+                if ((driverError && passengerError) || (!driverTrips?.length && !passengerTrips?.length)) {
+                    return; // Keep the default "no trips" message
+                }
+
+                let allTrips = [];
+                
+                if (driverTrips) {
+                    allTrips = allTrips.concat(driverTrips.map(trip => ({
+                        ...trip,
+                        type: 'driver'
+                    })));
+                }
+                
+                if (passengerTrips) {
+                    allTrips = allTrips.concat(passengerTrips.map(booking => ({
+                        ...booking.trips,
+                        type: 'passenger'
+                    })));
+                }
+
+                // Sort by date and take top 5
+                allTrips.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                allTrips = allTrips.slice(0, 5);
+
+                if (allTrips.length === 0) {
+                    return;
+                }
+
+                recentTripsContainer.innerHTML = allTrips.map(trip => `
+                    <div class="trip-card">
+                        <div class="trip-route">
+                            <i class="fas fa-route"></i>
+                            ${trip.from_location} → ${trip.to_location}
+                            <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-light);">
+                                ${trip.type === 'driver' ? 'As Driver' : 'As Passenger'}
+                            </span>
+                        </div>
+                        <div class="trip-details">
+                            <span>${formatDate(trip.departure_time)}</span>
+                            <span>₹${trip.price_per_seat} per seat</span>
+                            <span class="trip-status status-${trip.status}">${trip.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading recent trips:', error);
+            }
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function openEditModal(field) {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            const title = document.getElementById('modalTitle');
+            
+            // Reset form
+            form.reset();
+            
+            // Show/hide fields based on what we're editing
+            document.getElementById('nameField').style.display = field === 'name' || field === 'profile' ? 'block' : 'none';
+            document.getElementById('emailField').style.display = field === 'email' || field === 'profile' ? 'block' : 'none';
+            document.getElementById('phoneField').style.display = field === 'phone' || field === 'profile' ? 'block' : 'none';
+            
+            // Set current values
+            if (userProfile) {
+                document.getElementById('editName').value = userProfile.full_name || '';
+                document.getElementById('editEmail').value = userProfile.email || '';
+                document.getElementById('editPhone').value = userProfile.phone || '';
+            }
+            
+            // Set title
+            const titles = {
+                'profile': 'Edit Profile',
+                'name': 'Edit Name',
+                'email': 'Edit Email',
+                'phone': 'Edit Phone',
+                'avatar': 'Change Avatar'
+            };
+            title.textContent = titles[field] || 'Edit Profile';
+            
+            modal.classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        async function logout() {
+            try {
+                const { error } = await window.supabaseClient.auth.signOut();
+                if (error) throw error;
+                
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                alert('Error logging out. Please try again.');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            
+            try {
+                const updates = {};
+                
+                if (document.getElementById('nameField').style.display !== 'none') {
+                    updates.full_name = document.getElementById('editName').value;
+                }
+                
+                if (document.getElementById('phoneField').style.display !== 'none') {
+                    updates.phone = document.getElementById('editPhone').value;
+                }
+                
+                updates.updated_at = new Date().toISOString();
+                
+                const { data, error } = await window.supabaseClient
+                    .from('profiles')
+                    .update(updates)
+                    .eq('id', currentUser.id)
+                    .select();
+                
+                if (error) throw error;
+                
+                userProfile = data[0];
+                updateProfileUI(userProfile);
+                closeEditModal();
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Error updating profile. Please try again.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html>
