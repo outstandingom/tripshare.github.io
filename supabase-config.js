@@ -10,7 +10,8 @@ try {
         auth: {
             autoRefreshToken: true,
             persistSession: true,
-            detectSessionInUrl: true
+            detectSessionInUrl: true,
+            storage: window.localStorage
         }
     });
     console.log('Supabase client initialized successfully');
