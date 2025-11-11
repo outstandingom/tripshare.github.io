@@ -1,6 +1,6 @@
 // Supabase Configuration
 const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd2xxdG5xamxhc3BmY3J2dnBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MzI3NDcsImV4cCI6MjA3ODEwODc0N30.SacP5qRWQ3-WLnw79_BA7IlWgTCqzIgtPcmFEXvkRRU';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
 
 // Initialize Supabase client
 let supabase;
@@ -12,7 +12,6 @@ try {
             persistSession: true,
             detectSessionInUrl: true,
             storage: window.localStorage
-        }
     });
     console.log('Supabase client initialized successfully');
 } catch (error) {
