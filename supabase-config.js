@@ -12,6 +12,7 @@ try {
             persistSession: true,
             detectSessionInUrl: true,
             storage: window.localStorage
+        } // This closing brace was missing
     });
     console.log('Supabase client initialized successfully');
 } catch (error) {
