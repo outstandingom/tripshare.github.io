@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripShare - Create Trip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary: #0D9488;
+            --primary-dark: #0f766e;
+            --secondary: #1E40AF;
+            --text: #374151;
+            --text-light: #6B7280;
+            --white: #FFFFFF;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--white);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.8rem 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Main Container */
+        .container {
+            padding: 2rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* Form Sections */
+        .form-section {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #F0FDFA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            margin-right: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Map Container - FIXED CSS */
+        .map-container {
+            height: 400px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            border: 1px solid #E5E7EB;
+            position: relative;
+            z-index: 1;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Location Search Results */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .search-result-item:hover {
+            background-color: #F9FAFB;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Location Controls */
+        .location-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+
+        /* Route Steps */
+        .route-steps {
+            margin-top: 1.5rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background-color: #F8FAFC;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #E5E7EB;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .step-coordinates {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .step-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .step-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s;
+            padding: 0.25rem;
+        }
+
+        .step-btn:hover {
+            color: var(--primary);
+        }
+
+        .add-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            cursor: pointer;
+            margin-top: 1rem;
+            font-weight: 500;
+            padding: 0.75rem;
+            border: 1px dashed var(--primary);
+            border-radius: 8px;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .add-step:hover {
+            background-color: #F0FDFA;
+        }
+
+        /* Vehicle Selection */
+        .vehicle-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .vehicle-option {
+            border: 2px solid #E5E7EB;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .vehicle-option.selected {
+            border-color: var(--primary);
+            background-color: #F0FDFA;
+        }
+
+        .vehicle-icon {
+            font-size: 2rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .vehicle-option.selected .vehicle-icon {
+            color: var(--primary);
+        }
+
+        .vehicle-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .vehicle-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Preferences */
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+            background-color: #F8FAFC;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .preference-item.selected {
+            background-color: #F0FDFA;
+            border: 1px solid var(--primary);
+        }
+
+        .preference-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        .preference-item.selected .preference-icon {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .preference-text {
+            font-weight: 500;
+        }
+
+        /* Price Options */
+        .price-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-option {
+            flex: 1;
+            border: 2px solid #E5E7EB;
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .price-option.selected {
+            border-color: var(--primary);
+            background-color: #F0FDFA;
+        }
+
+        .price-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            background-color: #FEF2F2;
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Success Message */
+        .success-message {
+            background-color: #D1FAE5;
+            border: 1px solid var(--success);
+            color: #065F46;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .vehicle-options {
+                grid-template-columns: 1fr;
+            }
+
+            .preferences-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .price-options {
+                flex-direction: column;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .location-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <i class="fas fa-car"></i>
+            TripShare
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="create-trip.html">Create Trip</a>
+            <a href="#">My Trips</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="profile">
+            <div class="profile-img" id="navAvatar">AS</div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <h1 class="page-title">Create a New Trip</h1>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage" style="display: none;">
+            Error loading form. Please try again.
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage" style="display: none;">
+            Trip created successfully!
+        </div>
+
+        <!-- Trip Form -->
+        <form id="tripForm" style="display: none;">
+            <!-- Route Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h2 class="section-title">Route Details</h2>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="startLocation">Start Location</label>
+                        <div class="location-controls">
+                            <input type="text" class="form-input" id="startLocation" placeholder="Search or use current location">
+                            <button type="button" class="btn btn-secondary" id="useCurrentLocation">
+                                <i class="fas fa-location-arrow"></i> Current
+                            </button>
+                        </div>
+                        <div class="search-results" id="startLocationResults"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="endLocation">Destination</label>
+                        <input type="text" class="form-input" id="endLocation" placeholder="Search destination">
+                        <div class="search-results" id="endLocationResults"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="intermediateStop">Add Intermediate Stop</label>
+                    <div class="location-controls">
+                        <input type="text" class="form-input" id="intermediateStop" placeholder="Search intermediate location">
+                        <button type="button" class="btn btn-primary" id="addStopBtn">
+                            <i class="fas fa-plus"></i> Add Stop
+                        </button>
+                    </div>
+                    <div class="search-results" id="intermediateStopResults"></div>
+                </div>
+
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+
+                <div class="route-steps" id="routeSteps">
+                    <!-- Route steps will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Trip Details Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h2 class="section-title">Trip Details</h2>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="departureDate">Departure Date</label>
+                        <input type="date" class="form-input" id="departureDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="departureTime">Departure Time</label>
+                        <input type="time" class="form-input" id="departureTime" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Trip Description (Optional)</label>
+                    <textarea class="form-input" id="description" rows="3" placeholder="Describe your trip, any special requirements, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Vehicle Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <h2 class="section-title">Vehicle Details</h2>
+                </div>
+
+                <div class="vehicle-options" id="vehicleOptions">
+                    <div class="vehicle-option" data-type="car">
+                        <div class="vehicle-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="vehicle-name">Car</div>
+                        <div class="vehicle-desc">4-5 seats, comfortable</div>
+                    </div>
+                    <div class="vehicle-option" data-type="suv">
+                        <div class="vehicle-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="vehicle-name">SUV</div>
+                        <div class="vehicle-desc">5-7 seats, spacious</div>
+                    </div>
+                    <div class="vehicle-option" data-type="bike">
+                        <div class="vehicle-icon">
+                            <i class="fas fa-motorcycle"></i>
+                        </div>
+                        <div class="vehicle-name">Motorcycle</div>
+                        <div class="vehicle-desc">1 passenger, adventurous</div>
+                    </div>
+                    <div class="vehicle-option" data-type="other">
+                        <div class="vehicle-icon">
+                            <i class="fas fa-shuttle-van"></i>
+                        </div>
+                        <div class="vehicle-name">Other</div>
+                        <div class="vehicle-desc">Specify in description</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="vehicleModel">Vehicle Model (Optional)</label>
+                        <input type="text" class="form-input" id="vehicleModel" placeholder="e.g., Honda City, Toyota Innova">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="seatsAvailable">Seats Available</label>
+                        <select class="form-select" id="seatsAvailable" required>
+                            <option value="">Select seats</option>
+                            <option value="1">1 Seat</option>
+                            <option value="2">2 Seats</option>
+                            <option value="3">3 Seats</option>
+                            <option value="4">4 Seats</option>
+                            <option value="5">5+ Seats</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h2 class="section-title">Pricing</h2>
+                </div>
+
+                <div class="price-options" id="priceOptions">
+                    <div class="price-option selected" data-type="perSeat">
+                        <div class="price-label">Per Seat</div>
+                        <div class="price-desc">Charge per passenger</div>
+                    </div>
+                    <div class="price-option" data-type="total">
+                        <div class="price-label">Total Trip</div>
+                        <div class="price-desc">Split cost among passengers</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="price">Price (₹)</label>
+                    <input type="number" class="form-input" id="price" min="0" required>
+                </div>
+            </div>
+
+            <!-- Preferences Section -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h2 class="section-title">Trip Preferences</h2>
+                </div>
+
+                <div class="preferences-grid" id="preferencesGrid">
+                    <div class="preference-item" data-preference="noSmoking">
+                        <div class="preference-icon">
+                            <i class="fas fa-smoking-ban"></i>
+                        </div>
+                        <div class="preference-text">No Smoking</div>
+                    </div>
+                    <div class="preference-item" data-preference="noPets">
+                        <div class="preference-icon">
+                            <i class="fas fa-paw"></i>
+                        </div>
+                        <div class="preference-text">No Pets</div>
+                    </div>
+                    <div class="preference-item" data-preference="noAlcohol">
+                        <div class="preference-icon">
+                            <i class="fas fa-wine-bottle"></i>
+                        </div>
+                        <div class="preference-text">No Alcohol</div>
+                    </div>
+                    <div class="preference-item" data-preference="musicAllowed">
+                        <div class="preference-icon">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <div class="preference-text">Music Allowed</div>
+                    </div>
+                    <div class="preference-item" data-preference="luggageSpace">
+                        <div class="preference-icon">
+                            <i class="fas fa-suitcase"></i>
+                        </div>
+                        <div class="preference-text">Luggage Space</div>
+                    </div>
+                    <div class="preference-item" data-preference="womenOnly">
+                        <div class="preference-icon">
+                            <i class="fas fa-female"></i>
+                        </div>
+                        <div class="preference-text">Women Only</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary btn-large" id="cancelBtn">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary btn-large" id="createTripBtn">
+                    <i class="fas fa-plus-circle"></i> Create Trip
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-search nav-icon"></i>
+            <span>Search</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-road nav-icon"></i>
+            <span>My Trips</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
+
+        // Initialize Supabase client
+        let supabase;
+
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true,
+                    storage: window.localStorage
+                }
+            });
+            console.log('Supabase client initialized successfully');
+            window.supabaseClient = supabase;
+        } catch (error) {
+            console.error('Error initializing Supabase client:', error);
+            window.supabaseClient = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const tripForm = document.getElementById('tripForm');
+            
+            // Initialize the page
+            initializePage();
+            
+            async function initializePage() {
+                try {
+                    // Check if user is authenticated
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    
+                    if (authError || !user) {
+                        showError('Please log in to create a trip');
+                        return;
+                    }
+                    
+                    // Initialize map
+                    initializeMap();
+                    
+                    // Set up event listeners
+                    setupEventListeners();
+                    
+                    // Set minimum date to today
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('departureDate').min = today;
+                    
+                    // Hide loading spinner and show form
+                    loadingSpinner.style.display = 'none';
+                    tripForm.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Error initializing page:', error);
+                    showError('An unexpected error occurred');
+                }
+            }
+            
+            function initializeMap() {
+                // Initialize map centered on India by default
+                window.map = L.map('map').setView([20.5937, 78.9629], 5);
+
+                // Add OpenStreetMap layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(window.map);
+
+                window.markers = []; // store all markers
+                window.routeCoordinates = []; // store route coordinates
+                window.routeStops = []; // store route stop information
+            }
+            
+            function setupEventListeners() {
+                // Location search functionality
+                document.getElementById('startLocation').addEventListener('input', debounce(searchLocation, 500));
+                document.getElementById('endLocation').addEventListener('input', debounce(searchLocation, 500));
+                document.getElementById('intermediateStop').addEventListener('input', debounce(searchLocation, 500));
+                
+                // Hide search results when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.form-input')) {
+                        hideAllSearchResults();
+                    }
+                });
+                
+                // Current location button
+                document.getElementById('useCurrentLocation').addEventListener('click', useCurrentLocation);
+                
+                // Add stop button
+                document.getElementById('addStopBtn').addEventListener('click', addIntermediateStop);
+                
+                // Vehicle selection
+                const vehicleOptions = document.querySelectorAll('.vehicle-option');
+                vehicleOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        vehicleOptions.forEach(opt => opt.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
+                });
+                
+                // Price options
+                const priceOptions = document.querySelectorAll('.price-option');
+                priceOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        priceOptions.forEach(opt => opt.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
+                });
+                
+                // Preferences
+                const preferenceItems = document.querySelectorAll('.preference-item');
+                preferenceItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        this.classList.toggle('selected');
+                    });
+                });
+                
+                // Form submission
+                document.getElementById('tripForm').addEventListener('submit', createTrip);
+                
+                // Cancel button
+                document.getElementById('cancelBtn').addEventListener('click', function() {
+                    if (confirm('Are you sure you want to cancel? All entered data will be lost.')) {
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
+            
+            // Search for a location using Nominatim API
+            async function searchLocation(event) {
+                const input = event.target;
+                const place = input.value.trim();
+                
+                if (!place || place.length < 3) {
+                    hideSearchResults(input.id + 'Results');
+                    return;
+                }
+                
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}&countrycodes=in&limit=5`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        hideSearchResults(input.id + 'Results');
+                        return;
+                    }
+
+                    // Show search results
+                    showSearchResults(input.id + 'Results', data, input.id);
+                    
+                } catch (error) {
+                    console.error('Error searching location:', error);
+                    hideSearchResults(input.id + 'Results');
+                }
+            }
+            
+            // Show search results
+            function showSearchResults(containerId, results, inputType) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                
+                results.forEach(result => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <div><strong>${result.display_name.split(',')[0]}</strong></div>
+                        <div style="font-size: 0.8rem; color: #6B7280;">${result.display_name}</div>
+                    `;
+                    
+                    item.addEventListener('click', function() {
+                        selectLocation(result, inputType);
+                        hideSearchResults(containerId);
+                    });
+                    
+                    container.appendChild(item);
+                });
+                
+                container.style.display = 'block';
+            }
+            
+            // Hide search results
+            function hideSearchResults(containerId) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.style.display = 'none';
+                }
+            }
+            
+            // Hide all search results
+            function hideAllSearchResults() {
+                hideSearchResults('startLocationResults');
+                hideSearchResults('endLocationResults');
+                hideSearchResults('intermediateStopResults');
+            }
+            
+            // Select a location from search results
+            function selectLocation(result, inputType) {
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+                
+                // Update input field
+                document.getElementById(inputType).value = result.display_name;
+                
+                if (inputType === 'startLocation') {
+                    // Clear existing markers and add start marker
+                    clearMarkers();
+                    addMarker(lat, lon, result.display_name, 'start');
+                } else if (inputType === 'endLocation') {
+                    addMarker(lat, lon, result.display_name, 'end');
+                } else if (inputType === 'intermediateStop') {
+                    addMarker(lat, lon, result.display_name, 'intermediate');
+                    // Clear the intermediate stop input
+                    document.getElementById('intermediateStop').value = '';
+                }
+                
+                // Center map on the selected location
+                window.map.setView([lat, lon], 10);
+            }
+            
+            // Use current location
+            function useCurrentLocation() {
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by your browser');
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        // Clear existing markers and add current location marker
+                        clearMarkers();
+                        addMarker(lat, lon, 'Current Location', 'start');
+                        
+                        // Center map on current location
+                        window.map.setView([lat, lon], 13);
+                        
+                        // Reverse geocode to get address
+                        reverseGeocode(lat, lon).then(address => {
+                            document.getElementById('startLocation').value = address;
+                        });
+                    },
+                    function(error) {
+                        console.error('Error getting location:', error);
+                        alert('Unable to retrieve your location. Please enable location services.');
+                    }
+                );
+            }
+            
+            // Reverse geocode coordinates to get address
+            async function reverseGeocode(lat, lon) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    return data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                } catch (error) {
+                    console.error('Error reverse geocoding:', error);
+                    return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                }
+            }
+            
+            // Add a marker to the map
+            function addMarker(lat, lon, name, type) {
+                const marker = L.marker([lat, lon]).addTo(window.map);
+                
+                // Customize marker based on type
+                let popupContent = '';
+                if (type === 'start') {
+                    popupContent = `<b>Start:</b> ${name}`;
+                    marker._icon.classList.add('start-marker');
+                } else if (type === 'end') {
+                    popupContent = `<b>Destination:</b> ${name}`;
+                    marker._icon.classList.add('end-marker');
+                } else {
+                    popupContent = `<b>Stop:</b> ${name}`;
+                    marker._icon.classList.add('intermediate-marker');
+                }
+                
+                marker.bindPopup(popupContent).openPopup();
+                
+                window.markers.push(marker);
+                window.routeCoordinates.push([lat, lon]);
+                
+                // Store stop information
+                window.routeStops.push({
+                    type: type,
+                    name: name,
+                    lat: lat,
+                    lon: lon
+                });
+                
+                // If we have at least 2 points, draw a route
+                if (window.routeCoordinates.length >= 2) {
+                    drawRoute();
+                    updateRouteSteps();
+                }
+            }
+            
+            // Clear all markers from the map
+            function clearMarkers() {
+                window.markers.forEach(marker => window.map.removeLayer(marker));
+                window.markers = [];
+                window.routeCoordinates = [];
+                window.routeStops = [];
+                
+                // Clear any existing route
+                if (window.routeLayer) {
+                    window.map.removeLayer(window.routeLayer);
+                }
+                
+                // Clear route steps
+                document.getElementById('routeSteps').innerHTML = '';
+            }
+            
+            // Draw route on the map
+            function drawRoute() {
+                // Remove existing route if any
+                if (window.routeLayer) {
+                    window.map.removeLayer(window.routeLayer);
+                }
+                
+                // Draw new route
+                window.routeLayer = L.polyline(window.routeCoordinates, {
+                    color: 'var(--primary)',
+                    weight: 4,
+                    opacity: 0.7,
+                    smoothFactor: 1
+                }).addTo(window.map);
+                
+                // Fit map to show all markers
+                if (window.markers.length > 0) {
+                    const group = new L.featureGroup(window.markers);
+                    window.map.fitBounds(group.getBounds().pad(0.1));
+                }
+            }
+            
+            // Update the route steps display
+            function updateRouteSteps() {
+                const routeStepsContainer = document.getElementById('routeSteps');
+                routeStepsContainer.innerHTML = '';
+                
+                window.routeStops.forEach((stop, index) => {
+                    const stepItem = document.createElement('div');
+                    stepItem.className = 'step-item';
+                    
+                    let stepType = '';
+                    if (stop.type === 'start') {
+                        stepType = 'Start';
+                    } else if (stop.type === 'end') {
+                        stepType = 'Destination';
+                    } else {
+                        stepType = 'Stop';
+                    }
+                    
+                    stepItem.innerHTML = `
+                        <div class="step-number">${index + 1}</div>
+                        <div class="step-text">
+                            ${stepType}: ${stop.name}
+                            <div class="step-coordinates">${stop.lat.toFixed(4)}, ${stop.lon.toFixed(4)}</div>
+                        </div>
+                        <div class="step-actions">
+                            ${index > 0 && index < window.routeStops.length - 1 ? 
+                                `<button class="step-btn remove-step" data-index="${index}">
+                                    <i class="fas fa-times"></i>
+                                </button>` : ''}
+                        </div>
+                    `;
+                    
+                    routeStepsContainer.appendChild(stepItem);
+                });
+                
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.remove-step').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        removeIntermediateStop(index);
+                    });
+                });
+            }
+            
+            // Add an intermediate stop
+            function addIntermediateStop() {
+                const stopInput = document.getElementById('intermediateStop');
+                const stopName = stopInput.value.trim();
+                
+                if (!stopName) {
+                    alert('Please enter an intermediate stop location');
+                    return;
+                }
+                
+                // Search for the intermediate stop
+                searchIntermediateStop(stopName);
+            }
+            
+            // Search for intermediate stop
+            async function searchIntermediateStop(place) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}&countrycodes=in&limit=1`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert('Location not found. Please try another name.');
+                        return;
+                    }
+
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    
+                    // Add marker for intermediate stop
+                    addMarker(lat, lon, data[0].display_name, 'intermediate');
+                    
+                    // Clear the input
+                    document.getElementById('intermediateStop').value = '';
+                    
+                } catch (error) {
+                    console.error('Error searching intermediate stop:', error);
+                    alert('Error searching location. Please try again.');
+                }
+            }
+            
+            // Remove an intermediate stop
+            function removeIntermediateStop(index) {
+                // Remove marker from map
+                window.map.removeLayer(window.markers[index]);
+                window.markers.splice(index, 1);
+                
+                // Remove coordinate from route
+                window.routeCoordinates.splice(index, 1);
+                
+                // Remove stop information
+                window.routeStops.splice(index, 1);
+                
+                // Redraw route and update steps
+                drawRoute();
+                updateRouteSteps();
+            }
+            
+            // Create a new trip
+            async function createTrip(event) {
+                event.preventDefault();
+                
+                try {
+                    // Get form data
+                    const startLocation = document.getElementById('startLocation').value;
+                    const endLocation = document.getElementById('endLocation').value;
+                    const departureDate = document.getElementById('departureDate').value;
+                    const departureTime = document.getElementById('departureTime').value;
+                    const description = document.getElementById('description').value;
+                    const vehicleType = document.querySelector('.vehicle-option.selected').getAttribute('data-type');
+                    const vehicleModel = document.getElementById('vehicleModel').value;
+                    const seatsAvailable = document.getElementById('seatsAvailable').value;
+                    const priceType = document.querySelector('.price-option.selected').getAttribute('data-type');
+                    const price = document.getElementById('price').value;
+                    
+                    // Get selected preferences
+                    const selectedPreferences = [];
+                    document.querySelectorAll('.preference-item.selected').forEach(item => {
+                        selectedPreferences.push(item.getAttribute('data-preference'));
+                    });
+                    
+                    // Validate required fields
+                    if (!startLocation || !endLocation || !departureDate || !departureTime || !seatsAvailable || !price) {
+                        showError('Please fill in all required fields');
+                        return;
+                    }
+                    
+                    // Validate route
+                    if (window.routeStops.length < 2) {
+                        showError('Please set both start location and destination');
+                        return;
+                    }
+                    
+                    // Get user info
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    if (authError || !user) {
+                        showError('Please log in to create a trip');
+                        return;
+                    }
+                    
+                    // Get user data from users table
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('auth_id', user.id)
+                        .single();
+                    
+                    if (userError) {
+                        console.error('Error fetching user data:', userError);
+                        showError('Error creating trip');
+                        return;
+                    }
+                    
+                    // Create trip data object
+                    const tripData = {
+                        driver_id: userData.id,
+                        start_location: startLocation,
+                        end_location: endLocation,
+                        route_coordinates: JSON.stringify(window.routeCoordinates),
+                        departure_datetime: `${departureDate} ${departureTime}`,
+                        description: description,
+                        vehicle_type: vehicleType,
+                        vehicle_model: vehicleModel,
+                        seats_available: parseInt(seatsAvailable),
+                        price_type: priceType,
+                        price_per_seat: priceType === 'perSeat' ? parseFloat(price) : null,
+                        total_price: priceType === 'total' ? parseFloat(price) : null,
+                        preferences: selectedPreferences,
+                        status: 'active',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    // Insert trip into database
+                    const { data: trip, error: tripError } = await supabase
+                        .from('trips')
+                        .insert([tripData])
+                        .select();
+                    
+                    if (tripError) {
+                        console.error('Error creating trip:', tripError);
+                        showError('Error creating trip. Please try again.');
+                        return;
+                    }
+                    
+                    // Now create route stops in the trip_route_stops table
+                    const tripId = trip[0].id;
+                    const routeStopsData = window.routeStops.map((stop, index) => ({
+                        trip_id: tripId,
+                        stop_order: index,
+                        stop_name: stop.name,
+                        latitude: stop.lat,
+                        longitude: stop.lon,
+                        stop_type: stop.type
+                    }));
+                    
+                    const { error: stopsError } = await supabase
+                        .from('trip_route_stops')
+                        .insert(routeStopsData);
+                    
+                    if (stopsError) {
+                        console.error('Error creating route stops:', stopsError);
+                        // We don't show error to user here as trip was created successfully
+                    }
+                    
+                    // Show success message
+                    showSuccess('Trip created successfully!');
+                    
+                    // Redirect to trips page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'my-trips.html';
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Error creating trip:', error);
+                    showError('An unexpected error occurred');
+                }
+            }
+            
+            // Utility function to debounce search
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                
+                // Hide error after 5 seconds
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+            
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
