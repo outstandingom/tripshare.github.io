@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripShare - Search Trips</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary: #0D9488;
+            --primary-dark: #0f766e;
+            --secondary: #1E40AF;
+            --text: #374151;
+            --text-light: #6B7280;
+            --white: #FFFFFF;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Main Container */
+        .container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: calc(100vh - 80px);
+        }
+
+        /* Filters Sidebar */
+        .filters-sidebar {
+            background-color: var(--white);
+            border-right: 1px solid #E5E7EB;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filters-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .filter-section {
+            margin-bottom: 2rem;
+        }
+
+        .filter-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+
+        /* Map Container */
+        .map-container {
+            position: relative;
+            height: 100%;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Search Results */
+        .search-results {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 350px;
+            max-height: calc(100% - 2rem);
+            overflow-y: auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .results-header {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .results-title {
+            font-weight: 600;
+        }
+
+        .close-results {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .trip-card {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .trip-card:hover {
+            background-color: #F9FAFB;
+        }
+
+        .trip-card.active {
+            background-color: #F0FDFA;
+            border-left: 3px solid var(--primary);
+        }
+
+        .trip-route {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trip-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .trip-price {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .trip-seats {
+            color: var(--text-light);
+        }
+
+        .trip-driver {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Trip Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .trip-info-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .route-steps {
+            margin-top: 1rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background-color: #F8FAFC;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-number {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            font-size: 0.8rem;
+        }
+
+        .step-text {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .preferences-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .preference-tag {
+            background-color: #F0FDFA;
+            color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            flex: 1;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            background-color: #FEF2F2;
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Success Message */
+        .success-message {
+            background-color: #D1FAE5;
+            border: 1px solid var(--success);
+            color: #065F46;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-sidebar {
+                display: none;
+            }
+
+            .search-results {
+                width: calc(100% - 2rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <i class="fas fa-car"></i>
+            TripShare
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="create-trip.html">Create Trip</a>
+            <a href="search.html">Search Trips</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="profile">
+            <div class="profile-img" id="navAvatar">AS</div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Filters Sidebar -->
+        <div class="filters-sidebar">
+            <div class="filters-header">
+                <h2 class="filters-title">Search Trips</h2>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Location</h3>
+                <div class="form-group">
+                    <label class="form-label" for="startLocation">From</label>
+                    <input type="text" class="form-input" id="startLocation" placeholder="Start location">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="endLocation">To</label>
+                    <input type="text" class="form-input" id="endLocation" placeholder="Destination">
+                </div>
+                <button class="btn btn-secondary" id="useCurrentLocation">
+                    <i class="fas fa-location-arrow"></i> Use My Location
+                </button>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Date & Time</h3>
+                <div class="form-group">
+                    <label class="form-label" for="departureDate">Departure Date</label>
+                    <input type="date" class="form-input" id="departureDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="departureTime">Departure Time</label>
+                    <input type="time" class="form-input" id="departureTime">
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Price Range</h3>
+                <div class="form-group">
+                    <label class="form-label" for="minPrice">Min Price (₹)</label>
+                    <input type="number" class="form-input" id="minPrice" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="maxPrice">Max Price (₹)</label>
+                    <input type="number" class="form-input" id="maxPrice" placeholder="1000" min="0">
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Vehicle Type</h3>
+                <div class="form-group">
+                    <select class="form-select" id="vehicleType">
+                        <option value="">Any Vehicle</option>
+                        <option value="car">Car</option>
+                        <option value="suv">SUV</option>
+                        <option value="bike">Motorcycle</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Seats Available</h3>
+                <div class="form-group">
+                    <select class="form-select" id="seatsAvailable">
+                        <option value="">Any Seats</option>
+                        <option value="1">1 Seat</option>
+                        <option value="2">2 Seats</option>
+                        <option value="3">3 Seats</option>
+                        <option value="4">4+ Seats</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="searchBtn">
+                <i class="fas fa-search"></i> Search Trips
+            </button>
+
+            <button class="btn btn-secondary" id="resetBtn" style="margin-top: 1rem; width: 100%;">
+                <i class="fas fa-refresh"></i> Reset Filters
+            </button>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Search Results Panel -->
+            <div class="search-results" id="searchResults">
+                <div class="results-header">
+                    <h3 class="results-title">Search Results</h3>
+                    <button class="close-results" id="closeResults">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="tripResultsList">
+                    <!-- Trip cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Details Modal -->
+    <div class="modal" id="tripDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Trip Details</h3>
+                <button class="close-modal" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Trip details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-large" id="cancelBooking">
+                    Cancel
+                </button>
+                <button class="btn btn-primary btn-large" id="requestBooking">
+                    <i class="fas fa-paper-plane"></i> Request to Join
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
+
+        // Initialize Supabase client
+        let supabase;
+
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true,
+                    storage: window.localStorage
+                }
+            });
+            console.log('Supabase client initialized successfully');
+            window.supabaseClient = supabase;
+        } catch (error) {
+            console.error('Error initializing Supabase client:', error);
+            window.supabaseClient = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global variables
+            let map;
+            let userLocation = null;
+            let tripsData = [];
+            let markers = [];
+            let currentSelectedTrip = null;
+
+            // Initialize the page
+            initializePage();
+
+            async function initializePage() {
+                try {
+                    // Check if user is authenticated
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    
+                    if (authError || !user) {
+                        showError('Please log in to search trips');
+                        return;
+                    }
+
+                    // Initialize map
+                    initializeMap();
+
+                    // Set up event listeners
+                    setupEventListeners();
+
+                    // Load initial trips (nearby trips)
+                    loadNearbyTrips();
+                    
+                } catch (error) {
+                    console.error('Error initializing page:', error);
+                    showError('An unexpected error occurred');
+                }
+            }
+
+            function initializeMap() {
+                // Initialize map centered on India by default
+                map = L.map('map').setView([20.5937, 78.9629], 5);
+
+                // Add OpenStreetMap layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Add click event to map to close results
+                map.on('click', function() {
+                    document.getElementById('searchResults').style.display = 'none';
+                });
+            }
+
+            function setupEventListeners() {
+                // Search button
+                document.getElementById('searchBtn').addEventListener('click', searchTrips);
+                
+                // Reset filters
+                document.getElementById('resetBtn').addEventListener('click', resetFilters);
+                
+                // Use current location
+                document.getElementById('useCurrentLocation').addEventListener('click', useCurrentLocation);
+                
+                // Close results
+                document.getElementById('closeResults').addEventListener('click', function() {
+                    document.getElementById('searchResults').style.display = 'none';
+                });
+                
+                // Modal close
+                document.getElementById('closeModal').addEventListener('click', function() {
+                    document.getElementById('tripDetailsModal').style.display = 'none';
+                });
+                
+                // Cancel booking
+                document.getElementById('cancelBooking').addEventListener('click', function() {
+                    document.getElementById('tripDetailsModal').style.display = 'none';
+                });
+                
+                // Request booking
+                document.getElementById('requestBooking').addEventListener('click', requestBooking);
+            }
+
+            async function loadNearbyTrips() {
+                try {
+                    // Get user's current location or use default
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            async (position) => {
+                                userLocation = {
+                                    lat: position.coords.latitude,
+                                    lon: position.coords.longitude
+                                };
+                                
+                                // Center map on user location
+                                map.setView([userLocation.lat, userLocation.lon], 10);
+                                
+                                // Load trips near user location
+                                await searchTripsNearLocation(userLocation.lat, userLocation.lon);
+                            },
+                            async (error) => {
+                                console.error('Error getting location:', error);
+                                // Load all active trips if location not available
+                                await loadAllActiveTrips();
+                            }
+                        );
+                    } else {
+                        // Load all active trips if geolocation not supported
+                        await loadAllActiveTrips();
+                    }
+                } catch (error) {
+                    console.error('Error loading nearby trips:', error);
+                    showError('Error loading trips');
+                }
+            }
+
+            async function searchTripsNearLocation(lat, lon, radiusKm = 50) {
+                try {
+                    // For demo purposes, we'll load all trips and filter by distance
+                    // In a real app, you would use PostGIS for spatial queries
+                    const { data: trips, error } = await supabase
+                        .from('trips')
+                        .select(`
+                            *,
+                            trip_route_stops(*),
+                            users(full_name, rating)
+                        `)
+                        .eq('status', 'active')
+                        .gte('seats_available', 1);
+
+                    if (error) throw error;
+
+                    // Filter trips by distance (simplified - in real app use PostGIS)
+                    const nearbyTrips = trips.filter(trip => {
+                        const tripStart = trip.trip_route_stops.find(stop => stop.stop_type === 'start');
+                        if (!tripStart) return false;
+                        
+                        const distance = calculateDistance(
+                            lat, lon, 
+                            parseFloat(tripStart.latitude), 
+                            parseFloat(tripStart.longitude)
+                        );
+                        return distance <= radiusKm;
+                    });
+
+                    displayTrips(nearbyTrips);
+                    
+                } catch (error) {
+                    console.error('Error searching trips:', error);
+                    showError('Error searching trips');
+                }
+            }
+
+            async function loadAllActiveTrips() {
+                try {
+                    const { data: trips, error } = await supabase
+                        .from('trips')
+                        .select(`
+                            *,
+                            trip_route_stops(*),
+                            users(full_name, rating)
+                        `)
+                        .eq('status', 'active')
+                        .gte('seats_available', 1);
+
+                    if (error) throw error;
+
+                    displayTrips(trips);
+                    
+                } catch (error) {
+                    console.error('Error loading trips:', error);
+                    showError('Error loading trips');
+                }
+            }
+
+            async function searchTrips() {
+                try {
+                    const filters = getSearchFilters();
+                    
+                    let query = supabase
+                        .from('trips')
+                        .select(`
+                            *,
+                            trip_route_stops(*),
+                            users(full_name, rating)
+                        `)
+                        .eq('status', 'active')
+                        .gte('seats_available', 1);
+
+                    // Apply filters
+                    if (filters.startLocation) {
+                        query = query.ilike('start_location', `%${filters.startLocation}%`);
+                    }
+                    
+                    if (filters.endLocation) {
+                        query = query.ilike('end_location', `%${filters.endLocation}%`);
+                    }
+                    
+                    if (filters.departureDate) {
+                        query = query.gte('departure_datetime', `${filters.departureDate} 00:00:00`)
+                                   .lt('departure_datetime', `${filters.departureDate} 23:59:59`);
+                    }
+                    
+                    if (filters.vehicleType) {
+                        query = query.eq('vehicle_type', filters.vehicleType);
+                    }
+                    
+                    if (filters.seatsAvailable) {
+                        query = query.gte('seats_available', parseInt(filters.seatsAvailable));
+                    }
+                    
+                    if (filters.minPrice) {
+                        query = query.or(`price_per_seat.gte.${filters.minPrice},total_price.gte.${filters.minPrice}`);
+                    }
+                    
+                    if (filters.maxPrice) {
+                        query = query.or(`price_per_seat.lte.${filters.maxPrice},total_price.lte.${filters.maxPrice}`);
+                    }
+
+                    const { data: trips, error } = await query;
+
+                    if (error) throw error;
+
+                    displayTrips(trips);
+                    showSearchResults();
+                    
+                } catch (error) {
+                    console.error('Error searching trips:', error);
+                    showError('Error searching trips');
+                }
+            }
+
+            function getSearchFilters() {
+                return {
+                    startLocation: document.getElementById('startLocation').value.trim(),
+                    endLocation: document.getElementById('endLocation').value.trim(),
+                    departureDate: document.getElementById('departureDate').value,
+                    departureTime: document.getElementById('departureTime').value,
+                    minPrice: document.getElementById('minPrice').value,
+                    maxPrice: document.getElementById('maxPrice').value,
+                    vehicleType: document.getElementById('vehicleType').value,
+                    seatsAvailable: document.getElementById('seatsAvailable').value
+                };
+            }
+
+            function resetFilters() {
+                document.getElementById('startLocation').value = '';
+                document.getElementById('endLocation').value = '';
+                document.getElementById('departureDate').value = '';
+                document.getElementById('departureTime').value = '';
+                document.getElementById('minPrice').value = '';
+                document.getElementById('maxPrice').value = '';
+                document.getElementById('vehicleType').value = '';
+                document.getElementById('seatsAvailable').value = '';
+                
+                // Reload nearby trips
+                loadNearbyTrips();
+            }
+
+            function useCurrentLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            
+                            // Reverse geocode to get address
+                            reverseGeocode(lat, lon).then(address => {
+                                document.getElementById('startLocation').value = address;
+                            });
+                        },
+                        (error) => {
+                            alert('Unable to retrieve your location. Please enable location services.');
+                        }
+                    );
+                } else {
+                    alert('Geolocation is not supported by your browser');
+                }
+            }
+
+            async function reverseGeocode(lat, lon) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    return data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                } catch (error) {
+                    console.error('Error reverse geocoding:', error);
+                    return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                }
+            }
+
+            function displayTrips(trips) {
+                // Clear existing markers
+                clearMarkers();
+                
+                tripsData = trips;
+                
+                // Display trips on map and in results
+                trips.forEach((trip, index) => {
+                    addTripToMap(trip, index);
+                });
+                
+                // Update results list
+                updateResultsList(trips);
+                
+                // Fit map to show all markers
+                if (markers.length > 0) {
+                    const group = new L.featureGroup(markers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+            }
+
+            function addTripToMap(trip, index) {
+                const startStop = trip.trip_route_stops.find(stop => stop.stop_type === 'start');
+                if (!startStop) return;
+
+                const lat = parseFloat(startStop.latitude);
+                const lon = parseFloat(startStop.longitude);
+
+                // Create custom icon based on vehicle type
+                const iconColor = getVehicleColor(trip.vehicle_type);
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+
+                const marker = L.marker([lat, lon], { icon: customIcon }).addTo(map);
+                
+                // Create popup content
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h4 style="margin: 0 0 8px 0; color: var(--primary);">${trip.start_location} → ${trip.end_location}</h4>
+                        <p style="margin: 0 0 4px 0; font-size: 14px;">
+                            <strong>Departure:</strong> ${formatDateTime(trip.departure_datetime)}
+                        </p>
+                        <p style="margin: 0 0 4px 0; font-size: 14px;">
+                            <strong>Price:</strong> ₹${trip.price_per_seat || trip.total_price}
+                        </p>
+                        <p style="margin: 0 0 8px 0; font-size: 14px;">
+                            <strong>Seats:</strong> ${trip.seats_available} available
+                        </p>
+                        <button onclick="selectTrip(${index})" style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%;">
+                            View Details
+                        </button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+
+                // Store trip index with marker
+                marker.tripIndex = index;
+            }
+
+            function getVehicleColor(vehicleType) {
+                const colors = {
+                    'car': '#0D9488',
+                    'suv': '#1E40AF', 
+                    'bike': '#DC2626',
+                    'other': '#7C3AED'
+                };
+                return colors[vehicleType] || '#6B7280';
+            }
+
+            function updateResultsList(trips) {
+                const resultsList = document.getElementById('tripResultsList');
+                resultsList.innerHTML = '';
+
+                if (trips.length === 0) {
+                    resultsList.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-light);">No trips found matching your criteria.</div>';
+                    return;
+                }
+
+                trips.forEach((trip, index) => {
+                    const tripCard = document.createElement('div');
+                    tripCard.className = 'trip-card';
+                    tripCard.setAttribute('data-trip-index', index);
+                    
+                    const price = trip.price_per_seat || trip.total_price;
+                    const priceType = trip.price_per_seat ? 'per seat' : 'total trip';
+                    
+                    tripCard.innerHTML = `
+                        <div class="trip-route">
+                            <i class="fas fa-route"></i>
+                            ${trip.start_location} → ${trip.end_location}
+                        </div>
+                        <div class="trip-details">
+                            <span class="trip-price">₹${price} <small>${priceType}</small></span>
+                            <span class="trip-seats">${trip.seats_available} seats</span>
+                        </div>
+                        <div class="trip-details">
+                            <span>${formatDateTime(trip.departure_datetime)}</span>
+                            <span>${trip.vehicle_type}</span>
+                        </div>
+                        <div class="trip-driver">
+                            <i class="fas fa-user"></i>
+                            ${trip.users.full_name} • ⭐ ${trip.users.rating || '5.0'}
+                        </div>
+                    `;
+                    
+                    tripCard.addEventListener('click', function() {
+                        selectTrip(index);
+                    });
+                    
+                    resultsList.appendChild(tripCard);
+                });
+            }
+
+            function selectTrip(index) {
+                const trip = tripsData[index];
+                currentSelectedTrip = trip;
+                
+                // Highlight selected trip card
+                document.querySelectorAll('.trip-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                document.querySelector(`.trip-card[data-trip-index="${index}"]`).classList.add('active');
+                
+                // Show trip details modal
+                showTripDetails(trip);
+            }
+
+            function showTripDetails(trip) {
+                const modalBody = document.getElementById('modalBody');
+                
+                // Get route stops in order
+                const routeStops = trip.trip_route_stops.sort((a, b) => a.stop_order - b.stop_order);
+                
+                // Format preferences
+                const preferences = Array.isArray(trip.preferences) ? trip.preferences : [];
+                
+                modalBody.innerHTML = `
+                    <div class="trip-info-section">
+                        <h4 class="section-title">Route Information</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Start Location</span>
+                                <span class="info-value">${trip.start_location}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Destination</span>
+                                <span class="info-value">${trip.end_location}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Departure</span>
+                                <span class="info-value">${formatDateTime(trip.departure_datetime)}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Vehicle</span>
+                                <span class="info-value">${trip.vehicle_type} ${trip.vehicle_model || ''}</span>
+                            </div>
+                        </div>
+                        
+                        ${routeStops.length > 2 ? `
+                        <div class="route-steps">
+                            <h5 style="margin-bottom: 1rem;">Route Stops:</h5>
+                            ${routeStops.map((stop, idx) => `
+                                <div class="step-item">
+                                    <div class="step-number">${idx + 1}</div>
+                                    <div class="step-text">${stop.stop_name}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="trip-info-section">
+                        <h4 class="section-title">Pricing & Seats</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Price Type</span>
+                                <span class="info-value">${trip.price_type === 'perSeat' ? 'Per Seat' : 'Total Trip'}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Price</span>
+                                <span class="info-value">₹${trip.price_per_seat || trip.total_price}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Seats Available</span>
+                                <span class="info-value">${trip.seats_available}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="trip-info-section">
+                        <h4 class="section-title">Driver Information</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Driver Name</span>
+                                <span class="info-value">${trip.users.full_name}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Rating</span>
+                                <span class="info-value">⭐ ${trip.users.rating || '5.0'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${preferences.length > 0 ? `
+                    <div class="trip-info-section">
+                        <h4 class="section-title">Trip Preferences</h4>
+                        <div class="preferences-grid">
+                            ${preferences.map(pref => `
+                                <div class="preference-tag">${formatPreference(pref)}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${trip.description ? `
+                    <div class="trip-info-section">
+                        <h4 class="section-title">Description</h4>
+                        <p>${trip.description}</p>
+                    </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('tripDetailsModal').style.display = 'flex';
+            }
+
+            async function requestBooking() {
+                if (!currentSelectedTrip) return;
+                
+                try {
+                    // Get current user
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    if (authError || !user) {
+                        showError('Please log in to request booking');
+                        return;
+                    }
+
+                    // Get user data
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('auth_id', user.id)
+                        .single();
+
+                    if (userError) throw userError;
+
+                    // Check if seats are still available
+                    if (currentSelectedTrip.seats_available < 1) {
+                        showError('No seats available for this trip');
+                        return;
+                    }
+
+                    // Create booking request
+                    const { data: request, error } = await supabase
+                        .from('trip_requests')
+                        .insert([{
+                            trip_id: currentSelectedTrip.id,
+                            passenger_id: userData.id,
+                            seats_requested: 1,
+                            status: 'pending',
+                            message: 'I would like to join this trip'
+                        }])
+                        .select();
+
+                    if (error) throw error;
+
+                    // Show success message
+                    alert('Booking request sent successfully! The driver will review your request.');
+                    
+                    // Close modal
+                    document.getElementById('tripDetailsModal').style.display = 'none';
+                    
+                    // Refresh trips to update available seats
+                    searchTrips();
+                    
+                } catch (error) {
+                    console.error('Error requesting booking:', error);
+                    showError('Error sending booking request');
+                }
+            }
+
+            function showSearchResults() {
+                document.getElementById('searchResults').style.display = 'block';
+            }
+
+            function clearMarkers() {
+                markers.forEach(marker => map.removeLayer(marker));
+                markers = [];
+            }
+
+            function formatDateTime(datetimeString) {
+                const date = new Date(datetimeString);
+                return date.toLocaleDateString('en-IN') + ' ' + date.toLocaleTimeString('en-IN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+
+            function formatPreference(pref) {
+                const preferenceMap = {
+                    'noSmoking': 'No Smoking',
+                    'noPets': 'No Pets',
+                    'noAlcohol': 'No Alcohol',
+                    'musicAllowed': 'Music Allowed',
+                    'luggageSpace': 'Luggage Space',
+                    'womenOnly': 'Women Only'
+                };
+                return preferenceMap[pref] || pref;
+            }
+
+            function calculateDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371; // Earth's radius in km
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = 
+                    Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            function showError(message) {
+                // You can implement a toast notification system here
+                alert(message);
+            }
+
+            // Make selectTrip available globally for map popups
+            window.selectTrip = selectTrip;
+        });
+    </script>
+</body>
+</html>
