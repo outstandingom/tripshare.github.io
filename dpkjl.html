@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripShare - Alerts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary: #0D9488;
+            --primary-dark: #0f766e;
+            --secondary: #1E40AF;
+            --text: #374151;
+            --text-light: #6B7280;
+            --white: #FFFFFF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --info: #3B82F6;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #F8FAFC;
+        }
+
+        .dropdown-item.logout {
+            color: var(--danger);
+            border-top: 1px solid #E5E7EB;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--white);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.8rem 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 5%;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-field label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .filter-field select, .filter-field input {
+            padding: 0.8rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .filter-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            height: 45px;
+            min-width: 120px;
+        }
+
+        .filter-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #E5E7EB;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Alerts Grid */
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .alert-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .alert-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .route {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-time {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-accepted {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-rejected {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-cancelled {
+            background-color: #F3F4F6;
+            color: #6B7280;
+        }
+
+        .status-completed {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .alert-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .user-name {
+            font-weight: 500;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: var(--warning);
+            font-size: 0.9rem;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .btn-accept {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background-color: #0da271;
+        }
+
+        .btn-reject {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-complete {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .btn-complete:hover {
+            background-color: #2563EB;
+        }
+
+        .btn-cancel {
+            background-color: #F3F4F6;
+            color: var(--text);
+        }
+
+        .btn-cancel:hover {
+            background-color: #E5E7EB;
+        }
+
+        .btn-view {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* No Results Message */
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+            grid-column: 1 / -1;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #E5E7EB;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .close-modal:hover {
+            background-color: #F3F4F6;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 1rem;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-radius: 0 0 var(--radius) var(--radius);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .alerts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-field {
+                min-width: auto;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .alert-actions {
+                flex-direction: column;
+            }
+
+            .main-content {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .alert-card {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <i class="fas fa-car"></i>
+            TripShare
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="create-trip.html">Create Trip</a>
+            <a href="search.html">Search Trips</a>
+            <a href="alerts.html">Alerts</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="profile" id="profileDropdown">
+            <div class="profile-img" id="navAvatar">AS</div>
+            <i class="fas fa-chevron-down"></i>
+            <div class="profile-dropdown" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="create-trip.html" class="dropdown-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create Trip</span>
+                </a>
+                <a href="alerts.html" class="dropdown-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+                <a href="#" class="dropdown-item logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Alerts & Requests</h1>
+            <p class="page-subtitle">Manage your trip requests and see their status</p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-field">
+                <label for="filterDate">Filter by Date</label>
+                <input type="date" id="filterDate">
+            </div>
+            <div class="filter-field">
+                <label for="filterStatus">Filter by Status</label>
+                <select id="filterStatus">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="filterType">Filter by Type</label>
+                <select id="filterType">
+                    <option value="all">All Types</option>
+                    <option value="sent">Requests I Sent</option>
+                    <option value="received">Requests I Received</option>
+                </select>
+            </div>
+            <button class="filter-btn" id="applyFilters">
+                <i class="fas fa-filter"></i> Apply Filters
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="sent">Requests I Sent</div>
+            <div class="tab" data-tab="received">Requests I Received</div>
+        </div>
+
+        <!-- Sent Requests Tab -->
+        <div class="tab-content active" id="sentTab">
+            <div class="alerts-grid" id="sentRequestsGrid">
+                <div class="loading">
+                    <div>
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading your requests...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Received Requests Tab -->
+        <div class="tab-content" id="receivedTab">
+            <div class="alerts-grid" id="receivedRequestsGrid">
+                <div class="loading">
+                    <div>
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading received requests...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Details Modal -->
+    <div class="modal" id="requestDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Request Details</h3>
+                <button class="close-modal" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Request details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAction">
+                    Close
+                </button>
+                <button class="btn btn-primary" id="confirmAction">
+                    <i class="fas fa-check"></i> Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <i class="fas fa-search nav-icon"></i>
+            <span>Search</span>
+        </a>
+        <a href="create-trip.html" class="nav-item">
+            <i class="fas fa-plus-circle nav-icon"></i>
+            <span>Create</span>
+        </a>
+        <a href="alerts.html" class="nav-item active">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
+
+        // Initialize Supabase client
+        let supabase;
+
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true,
+                    storage: window.localStorage
+                }
+            });
+            console.log('Supabase client initialized successfully');
+            window.supabaseClient = supabase;
+        } catch (error) {
+            console.error('Error initializing Supabase client:', error);
+            window.supabaseClient = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global variables
+            let currentUser = null;
+            let currentUserId = null;
+            let sentRequests = [];
+            let receivedRequests = [];
+            let currentSelectedRequest = null;
+            let currentAction = null;
+            const profileDropdown = document.getElementById('profileDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            // Initialize the page
+            initializePage();
+
+            // Profile dropdown toggle
+            profileDropdown.addEventListener('click', function() {
+                dropdownMenu.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!profileDropdown.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await logoutUser();
+            });
+
+            async function initializePage() {
+                try {
+                    // Check if user is authenticated
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    
+                    if (authError || !user) {
+                        showError('Please log in to view alerts');
+                        return;
+                    }
+
+                    currentUser = user;
+
+                    // Get user data
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('id, full_name')
+                        .eq('auth_id', user.id)
+                        .single();
+
+                    if (userError) throw userError;
+                    
+                    currentUserId = userData.id;
+                    
+                    // Set profile avatar
+                    document.getElementById('navAvatar').textContent = getInitials(userData.full_name);
+
+                    // Set up event listeners
+                    setupEventListeners();
+
+                    // Load initial data
+                    loadSentRequests();
+                    loadReceivedRequests();
+                    
+                } catch (error) {
+                    console.error('Error initializing page:', error);
+                    showError('An unexpected error occurred');
+                }
+            }
+
+            function setupEventListeners() {
+                // Tab switching
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Remove active class from all tabs
+                        document.querySelectorAll('.tab').forEach(t => {
+                            t.classList.remove('active');
+                        });
+                        
+                        // Add active class to clicked tab
+                        this.classList.add('active');
+                        
+                        // Hide all tab contents
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        
+                        // Show the corresponding tab content
+                        const tabId = this.getAttribute('data-tab');
+                        document.getElementById(`${tabId}Tab`).classList.add('active');
+                    });
+                });
+                
+                // Apply filters
+                document.getElementById('applyFilters').addEventListener('click', applyFilters);
+                
+                // Modal close
+                document.getElementById('closeModal').addEventListener('click', function() {
+                    document.getElementById('requestDetailsModal').style.display = 'none';
+                });
+                
+                // Cancel action
+                document.getElementById('cancelAction').addEventListener('click', function() {
+                    document.getElementById('requestDetailsModal').style.display = 'none';
+                });
+                
+                // Confirm action
+                document.getElementById('confirmAction').addEventListener('click', confirmAction);
+            }
+
+            async function loadSentRequests() {
+                try {
+                    showLoadingState('sentRequestsGrid');
+                    
+                    const { data: requests, error } = await supabase
+                        .from('trip_requests')
+                        .select(`
+                            *,
+                            trips(
+                                *,
+                                users(full_name, rating, total_trips)
+                            )
+                        `)
+                        .eq('passenger_id', currentUserId)
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    sentRequests = requests || [];
+                    displaySentRequests(sentRequests);
+                    
+                } catch (error) {
+                    console.error('Error loading sent requests:', error);
+                    showError('Error loading your requests');
+                    showNoResults('sentRequestsGrid');
+                }
+            }
+
+            async function loadReceivedRequests() {
+                try {
+                    showLoadingState('receivedRequestsGrid');
+                    
+                    // Get trips created by current user
+                    const { data: userTrips, error: tripsError } = await supabase
+                        .from('trips')
+                        .select('id')
+                        .eq('driver_id', currentUserId);
+
+                    if (tripsError) throw tripsError;
+
+                    const tripIds = userTrips.map(trip => trip.id);
+                    
+                    if (tripIds.length === 0) {
+                        showNoResults('receivedRequestsGrid', 'You have no active trips');
+                        return;
+                    }
+
+                    // Get requests for user's trips
+                    const { data: requests, error } = await supabase
+                        .from('trip_requests')
+                        .select(`
+                            *,
+                            trips(
+                                *,
+                                users(full_name, rating, total_trips)
+                            ),
+                            users(full_name, rating, total_trips)
+                        `)
+                        .in('trip_id', tripIds)
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    receivedRequests = requests || [];
+                    displayReceivedRequests(receivedRequests);
+                    
+                } catch (error) {
+                    console.error('Error loading received requests:', error);
+                    showError('Error loading received requests');
+                    showNoResults('receivedRequestsGrid');
+                }
+            }
+
+            function displaySentRequests(requests) {
+                const grid = document.getElementById('sentRequestsGrid');
+                
+                if (requests.length === 0) {
+                    showNoResults('sentRequestsGrid', 'You have not sent any trip requests yet');
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                
+                requests.forEach(request => {
+                    const trip = request.trips;
+                    const driver = trip.users;
+                    const driverInitials = getInitials(driver.full_name);
+                    
+                    const requestCard = document.createElement('div');
+                    requestCard.className = 'alert-card';
+                    
+                    requestCard.innerHTML = `
+                        <div class="alert-header">
+                            <div>
+                                <div class="route">
+                                    <i class="fas fa-route"></i>
+                                    ${trip.start_location} → ${trip.end_location}
+                                </div>
+                                <div class="date-time">
+                                    <i class="far fa-calendar"></i>
+                                    ${formatDateTime(trip.departure_datetime)}
+                                </div>
+                            </div>
+                            <div class="status-badge status-${request.status}">
+                                ${request.status}
+                            </div>
+                        </div>
+                        
+                        <div class="alert-details">
+                            <div class="detail">
+                                <div class="detail-value">${request.seats_requested}</div>
+                                <div class="detail-label">Seats Requested</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">₹${trip.price_per_seat || trip.total_price}</div>
+                                <div class="detail-label">${trip.price_type === 'perSeat' ? 'Per Seat' : 'Total'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">${trip.vehicle_type}</div>
+                                <div class="detail-label">Vehicle</div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-info">
+                            <div class="user-img">${driverInitials}</div>
+                            <div>
+                                <div class="user-name">${driver.full_name}</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>${driver.rating || '5.0'} (${driver.total_trips || 0})</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert-actions">
+                            ${request.status === 'pending' ? `
+                                <button class="action-btn btn-cancel" onclick="cancelRequest(${request.id})">
+                                    <i class="fas fa-times"></i> Cancel Request
+                                </button>
+                            ` : ''}
+                            ${request.status === 'accepted' ? `
+                                <button class="action-btn btn-complete" onclick="completeTrip(${request.trip_id}, ${request.id})">
+                                    <i class="fas fa-check-circle"></i> Mark Complete
+                                </button>
+                            ` : ''}
+                            <button class="action-btn btn-view" onclick="viewRequestDetails(${request.id}, 'sent')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(requestCard);
+                });
+            }
+
+            function displayReceivedRequests(requests) {
+                const grid = document.getElementById('receivedRequestsGrid');
+                
+                if (requests.length === 0) {
+                    showNoResults('receivedRequestsGrid', 'You have no pending requests for your trips');
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                
+                requests.forEach(request => {
+                    const trip = request.trips;
+                    const passenger = request.users;
+                    const passengerInitials = getInitials(passenger.full_name);
+                    
+                    const requestCard = document.createElement('div');
+                    requestCard.className = 'alert-card';
+                    
+                    requestCard.innerHTML = `
+                        <div class="alert-header">
+                            <div>
+                                <div class="route">
+                                    <i class="fas fa-route"></i>
+                                    ${trip.start_location} → ${trip.end_location}
+                                </div>
+                                <div class="date-time">
+                                    <i class="far fa-calendar"></i>
+                                    ${formatDateTime(trip.departure_datetime)}
+                                </div>
+                            </div>
+                            <div class="status-badge status-${request.status}">
+                                ${request.status}
+                            </div>
+                        </div>
+                        
+                        <div class="alert-details">
+                            <div class="detail">
+                                <div class="detail-value">${request.seats_requested}</div>
+                                <div class="detail-label">Seats Requested</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">₹${trip.price_per_seat || trip.total_price}</div>
+                                <div class="detail-label">${trip.price_type === 'perSeat' ? 'Per Seat' : 'Total'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">${trip.vehicle_type}</div>
+                                <div class="detail-label">Vehicle</div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-info">
+                            <div class="user-img">${passengerInitials}</div>
+                            <div>
+                                <div class="user-name">${passenger.full_name}</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>${passenger.rating || '5.0'} (${passenger.total_trips || 0})</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${request.status === 'pending' ? `
+                            <div class="alert-actions">
+                                <button class="action-btn btn-accept" onclick="acceptRequest(${request.id})">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                                <button class="action-btn btn-reject" onclick="rejectRequest(${request.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                                <button class="action-btn btn-view" onclick="viewRequestDetails(${request.id}, 'received')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="alert-actions">
+                                ${request.status === 'accepted' ? `
+                                    <button class="action-btn btn-complete" onclick="completeTrip(${request.trip_id}, ${request.id})">
+                                        <i class="fas fa-check-circle"></i> Mark Complete
+                                    </button>
+                                ` : ''}
+                                <button class="action-btn btn-view" onclick="viewRequestDetails(${request.id}, 'received')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </div>
+                        `}
+                    `;
+                    
+                    grid.appendChild(requestCard);
+                });
+            }
+
+            function applyFilters() {
+                const filterDate = document.getElementById('filterDate').value;
+                const filterStatus = document.getElementById('filterStatus').value;
+                const filterType = document.getElementById('filterType').value;
+                
+                // Filter sent requests
+                let filteredSent = [...sentRequests];
+                let filteredReceived = [...receivedRequests];
+                
+                // Apply date filter
+                if (filterDate) {
+                    filteredSent = filteredSent.filter(request => {
+                        const requestDate = new Date(request.created_at).toISOString().split('T')[0];
+                        return requestDate === filterDate;
+                    });
+                    
+                    filteredReceived = filteredReceived.filter(request => {
+                        const requestDate = new Date(request.created_at).toISOString().split('T')[0];
+                        return requestDate === filterDate;
+                    });
+                }
+                
+                // Apply status filter
+                if (filterStatus !== 'all') {
+                    filteredSent = filteredSent.filter(request => request.status === filterStatus);
+                    filteredReceived = filteredReceived.filter(request => request.status === filterStatus);
+                }
+                
+                // Apply type filter to determine which tab to show
+                if (filterType === 'sent') {
+                    document.querySelector('.tab[data-tab="sent"]').click();
+                } else if (filterType === 'received') {
+                    document.querySelector('.tab[data-tab="received"]').click();
+                }
+                
+                // Display filtered results
+                displaySentRequests(filteredSent);
+                displayReceivedRequests(filteredReceived);
+            }
+
+            function viewRequestDetails(requestId, type) {
+                let request;
+                
+                if (type === 'sent') {
+                    request = sentRequests.find(r => r.id === requestId);
+                } else {
+                    request = receivedRequests.find(r => r.id === requestId);
+                }
+                
+                if (!request) return;
+                
+                currentSelectedRequest = request;
+                const trip = request.trips;
+                const user = type === 'sent' ? trip.users : request.users;
+                const userInitials = getInitials(user.full_name);
+                
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 1.5rem;">
+                        <div class="route" style="font-size: 1.3rem;">
+                            <i class="fas fa-route"></i>
+                            ${trip.start_location} → ${trip.end_location}
+                        </div>
+                        <div class="date-time">
+                            <i class="far fa-calendar"></i>
+                            ${formatDateTime(trip.departure_datetime)}
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">Request Status</div>
+                            <div class="status-badge status-${request.status}" style="display: inline-block; margin-top: 0.3rem;">
+                                ${request.status}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">Seats Requested</div>
+                            <div style="font-weight: 600;">${request.seats_requested}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">Price</div>
+                            <div style="font-weight: 600;">₹${trip.price_per_seat || trip.total_price} ${trip.price_type === 'perSeat' ? 'per seat' : 'total'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--text-light);">Vehicle</div>
+                            <div style="font-weight: 600;">${trip.vehicle_type} ${trip.vehicle_model || ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">${type === 'sent' ? 'Driver' : 'Passenger'} Information</div>
+                        <div class="user-info">
+                            <div class="user-img">${userInitials}</div>
+                            <div>
+                                <div class="user-name">${user.full_name}</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>${user.rating || '5.0'} (${user.total_trips || 0} trips)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${request.message ? `
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">Message from ${type === 'sent' ? 'you' : 'passenger'}</div>
+                        <div style="background: #F8FAFC; border-radius: 8px; padding: 1rem;">${request.message}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">Request Date</div>
+                        <div>${formatDateTime(request.created_at)}</div>
+                    </div>
+                `;
+                
+                // Update modal buttons based on context
+                const confirmBtn = document.getElementById('confirmAction');
+                const cancelBtn = document.getElementById('cancelAction');
+                
+                if (type === 'received' && request.status === 'pending') {
+                    confirmBtn.style.display = 'flex';
+                    confirmBtn.innerHTML = '<i class="fas fa-check"></i> Accept Request';
+                    currentAction = 'accept';
+                } else {
+                    confirmBtn.style.display = 'none';
+                }
+                
+                cancelBtn.innerHTML = 'Close';
+                
+                document.getElementById('requestDetailsModal').style.display = 'flex';
+            }
+
+            async function confirmAction() {
+                if (!currentSelectedRequest || !currentAction) return;
+                
+                try {
+                    if (currentAction === 'accept') {
+                        // Accept the request
+                        const { error } = await supabase
+                            .from('trip_requests')
+                            .update({ status: 'accepted' })
+                            .eq('id', currentSelectedRequest.id);
+
+                        if (error) throw error;
+
+                        // Update available seats in the trip
+                        const { error: tripError } = await supabase
+                            .from('trips')
+                            .update({ 
+                                seats_available: currentSelectedRequest.trips.seats_available - currentSelectedRequest.seats_requested 
+                            })
+                            .eq('id', currentSelectedRequest.trip_id);
+
+                        if (tripError) throw tripError;
+
+                        alert('Request accepted successfully!');
+                    }
+                    
+                    // Close modal
+                    document.getElementById('requestDetailsModal').style.display = 'none';
+                    
+                    // Refresh data
+                    loadSentRequests();
+                    loadReceivedRequests();
+                    
+                } catch (error) {
+                    console.error('Error confirming action:', error);
+                    showError('Error processing request');
+                }
+            }
+
+            async function cancelRequest(requestId) {
+                if (!confirm('Are you sure you want to cancel this request?')) return;
+                
+                try {
+                    const { error } = await supabase
+                        .from('trip_requests')
+                        .update({ status: 'cancelled' })
+                        .eq('id', requestId);
+
+                    if (error) throw error;
+
+                    alert('Request cancelled successfully!');
+                    
+                    // Refresh data
+                    loadSentRequests();
+                    
+                } catch (error) {
+                    console.error('Error cancelling request:', error);
+                    showError('Error cancelling request');
+                }
+            }
+
+            async function acceptRequest(requestId) {
+                if (!confirm('Are you sure you want to accept this request?')) return;
+                
+                try {
+                    const request = receivedRequests.find(r => r.id === requestId);
+                    if (!request) return;
+
+                    // Accept the request
+                    const { error } = await supabase
+                        .from('trip_requests')
+                        .update({ status: 'accepted' })
+                        .eq('id', requestId);
+
+                    if (error) throw error;
+
+                    // Update available seats in the trip
+                    const { error: tripError } = await supabase
+                        .from('trips')
+                        .update({ 
+                            seats_available: request.trips.seats_available - request.seats_requested 
+                        })
+                        .eq('id', request.trip_id);
+
+                    if (tripError) throw tripError;
+
+                    alert('Request accepted successfully!');
+                    
+                    // Refresh data
+                    loadReceivedRequests();
+                    
+                } catch (error) {
+                    console.error('Error accepting request:', error);
+                    showError('Error accepting request');
+                }
+            }
+
+            async function rejectRequest(requestId) {
+                if (!confirm('Are you sure you want to reject this request?')) return;
+                
+                try {
+                    const { error } = await supabase
+                        .from('trip_requests')
+                        .update({ status: 'rejected' })
+                        .eq('id', requestId);
+
+                    if (error) throw error;
+
+                    alert('Request rejected successfully!');
+                    
+                    // Refresh data
+                    loadReceivedRequests();
+                    
+                } catch (error) {
+                    console.error('Error rejecting request:', error);
+                    showError('Error rejecting request');
+                }
+            }
+
+            async function completeTrip(tripId, requestId) {
+                if (!confirm('Are you sure you want to mark this trip as completed?')) return;
+                
+                try {
+                    // Update trip status to completed
+                    const { error: tripError } = await supabase
+                        .from('trips')
+                        .update({ status: 'completed' })
+                        .eq('id', tripId);
+
+                    if (tripError) throw tripError;
+
+                    // Update request status to completed
+                    const { error: requestError } = await supabase
+                        .from('trip_requests')
+                        .update({ status: 'completed' })
+                        .eq('id', requestId);
+
+                    if (requestError) throw requestError;
+
+                    alert('Trip marked as completed successfully!');
+                    
+                    // Refresh data
+                    loadSentRequests();
+                    loadReceivedRequests();
+                    
+                } catch (error) {
+                    console.error('Error completing trip:', error);
+                    showError('Error completing trip');
+                }
+            }
+
+            function showLoadingState(gridId) {
+                const grid = document.getElementById(gridId);
+                grid.innerHTML = `
+                    <div class="loading">
+                        <div>
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function showNoResults(gridId, message = 'No results found') {
+                const grid = document.getElementById(gridId);
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-inbox"></i>
+                        <h3>${message}</h3>
+                    </div>
+                `;
+            }
+
+            function formatDateTime(datetimeString) {
+                const date = new Date(datetimeString);
+                return date.toLocaleDateString('en-IN') + ' ' + date.toLocaleTimeString('en-IN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+
+            function getInitials(name) {
+                if (!name) return 'US';
+                return name
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
+            }
+
+            function showError(message) {
+                alert(message);
+            }
+            
+            async function logoutUser() {
+                try {
+                    const { error } = await supabase.auth.signOut();
+                    
+                    if (error) {
+                        console.error('Error signing out:', error);
+                        showError('Error logging out');
+                        return;
+                    }
+                    
+                    // Redirect to login page
+                    window.location.href = 'login.html';
+                    
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                    showError('An error occurred during logout');
+                }
+            }
+
+            // Make functions available globally for onclick handlers
+            window.cancelRequest = cancelRequest;
+            window.acceptRequest = acceptRequest;
+            window.rejectRequest = rejectRequest;
+            window.viewRequestDetails = viewRequestDetails;
+            window.completeTrip = completeTrip;
+        });
+    </script>
+</body>
+</html>
