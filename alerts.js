@@ -1,4 +1,4 @@
-<script>
+
     // Supabase Configuration
     const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
@@ -695,4 +695,4 @@
             showError('An unexpected error occurred');
         }
     }
-</script>
+
