@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripShare - My Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary: #0D9488;
+            --primary-dark: #0f766e;
+            --secondary: #1E40AF;
+            --text: #374151;
+            --text-light: #6B7280;
+            --white: #FFFFFF;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #F8FAFC;
+        }
+
+        .dropdown-item.logout {
+            color: var(--error);
+            border-top: 1px solid #E5E7EB;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--white);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.8rem 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Profile Container */
+        .profile-container {
+            padding: 2rem 5%;
+        }
+
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .edit-avatar {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background-color: var(--white);
+            color: var(--primary);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--warning);
+            margin-bottom: 1rem;
+        }
+
+        .profile-bio {
+            color: var(--text-light);
+            text-align: center;
+            max-width: 500px;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .stat-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Profile Sections */
+        .profile-section {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .edit-btn {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .edit-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .info-value {
+            color: var(--text-light);
+        }
+
+        /* Preferences Section */
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+            background-color: #F8FAFC;
+            border-radius: 8px;
+        }
+
+        .preference-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #F0FDFA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .preference-text {
+            font-weight: 500;
+        }
+
+        /* Recent Trips */
+        .trips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .trip-card {
+            background-color: #F8FAFC;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .route {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-time {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trip-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .detail-value {
+            font-weight: 600;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .trip-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-completed {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-upcoming {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            background-color: #FEF2F2;
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--white);
+            padding: 2rem 5%;
+            border-top: 1px solid #E5E7EB;
+            margin-top: 2rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .profile-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .trips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preferences-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .action-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <i class="fas fa-car"></i>
+            TripShare
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="create-trip.html">Create Trip</a>
+            <a href="search.html">Search Trips</a>
+            <a href="alerts.html">Alerts</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="profile" id="profileDropdown">
+            <div class="profile-img" id="navAvatar">AS</div>
+            <i class="fas fa-chevron-down"></i>
+            <div class="profile-dropdown" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="create-trip.html" class="dropdown-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create Trip</span>
+                </a>
+                <a href="alerts.html" class="dropdown-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+                <a href="#" class="dropdown-item logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage" style="display: none;">
+            Error loading profile. Please try again.
+        </div>
+
+        <!-- Profile Content -->
+        <div id="profileContent" style="display: none;">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    <span id="avatarText">AS</span>
+                    <div class="edit-avatar">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <h1 class="profile-name" id="profileName">Loading...</h1>
+                <div class="profile-rating">
+                    <i class="fas fa-star"></i>
+                    <span id="profileRating">0.0</span>
+                    <span>(<span id="totalReviews">0</span> reviews)</span>
+                </div>
+                <p class="profile-bio" id="profileBio">No bio provided yet.</p>
+                
+                <div class="profile-actions">
+                    <a href="create-trip.html" class="action-btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create Trip
+                    </a>
+                    <button class="action-btn btn-secondary" id="editProfileBtn">
+                        <i class="fas fa-edit"></i>
+                        Edit Profile
+                    </button>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalTrips">0</div>
+                        <div class="stat-label">Total Trips</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="driverTrips">0</div>
+                        <div class="stat-label">As Driver</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="passengerTrips">0</div>
+                        <div class="stat-label">As Passenger</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="profile-section">
+                <div class="section-header">
+                    <h2 class="section-title">Personal Information</h2>
+                    <button class="edit-btn" id="editPersonalInfo">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Full Name</span>
+                        <span class="info-value" id="infoFullName">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value" id="infoEmail">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phone</span>
+                        <span class="info-value" id="infoPhone">Not provided</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Member Since</span>
+                        <span class="info-value" id="infoMemberSince">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Travel Preferences Section -->
+            <div class="profile-section">
+                <div class="section-header">
+                    <h2 class="section-title">Travel Preferences</h2>
+                    <button class="edit-btn" id="editPreferences">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </div>
+                <div class="preferences-grid" id="preferencesList">
+                    <!-- Preferences will be populated here -->
+                </div>
+            </div>
+
+            <!-- Recent Trips Section -->
+            <div class="profile-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Trips</h2>
+                    <a href="#" class="edit-btn" id="viewAllTrips">View All</a>
+                </div>
+                <div class="trips-grid" id="recentTrips">
+                    <!-- Recent trips will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <i class="fas fa-search nav-icon"></i>
+            <span>Search</span>
+        </a>
+        <a href="create-trip.html" class="nav-item">
+            <i class="fas fa-plus-circle nav-icon"></i>
+            <span>Create</span>
+        </a>
+        <a href="alerts.html" class="nav-item">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="profile.html" class="nav-item active">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 TripShare. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
+
+        // Initialize Supabase client
+        let supabase;
+
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true,
+                    storage: window.localStorage
+                }
+            });
+            console.log('Supabase client initialized successfully');
+            window.supabaseClient = supabase;
+        } catch (error) {
+            console.error('Error initializing Supabase client:', error);
+            window.supabaseClient = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const errorMessage = document.getElementById('errorMessage');
+            const profileContent = document.getElementById('profileContent');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            // Load user profile data
+            loadUserProfile();
+            
+            // Profile dropdown toggle
+            profileDropdown.addEventListener('click', function() {
+                dropdownMenu.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!profileDropdown.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await logoutUser();
+            });
+            
+            // Edit profile button handler
+            document.getElementById('editProfileBtn').addEventListener('click', function() {
+                alert('Edit profile functionality would open a form here');
+                // In a real app, this would open a modal or navigate to an edit page
+            });
+            
+            document.getElementById('editPersonalInfo').addEventListener('click', function() {
+                alert('Edit personal info functionality would open a form here');
+            });
+            
+            document.getElementById('editPreferences').addEventListener('click', function() {
+                alert('Edit preferences functionality would open a form here');
+            });
+            
+            async function loadUserProfile() {
+                try {
+                    // Check if user is authenticated
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    
+                    if (authError || !user) {
+                        showError('Please log in to view your profile');
+                        return;
+                    }
+                    
+                    // Fetch user data from users table
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('auth_id', user.id)
+                        .single();
+                    
+                    if (userError) {
+                        console.error('Error fetching user data:', userError);
+                        showError('Error loading profile data');
+                        return;
+                    }
+                    
+                    // Populate profile with user data
+                    await populateProfile(userData);
+                    
+                    // Hide loading spinner and show content
+                    loadingSpinner.style.display = 'none';
+                    profileContent.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                    showError('An unexpected error occurred');
+                }
+            }
+            
+            async function populateProfile(userData) {
+                // Extract initials for avatar
+                const initials = getInitials(userData.full_name);
+                document.getElementById('navAvatar').textContent = initials;
+                document.getElementById('avatarText').textContent = initials;
+                document.getElementById('profileAvatar').style.backgroundColor = getRandomColor();
+                
+                // Populate basic info
+                document.getElementById('profileName').textContent = userData.full_name;
+                document.getElementById('infoFullName').textContent = userData.full_name;
+                document.getElementById('infoEmail').textContent = userData.email;
+                document.getElementById('infoPhone').textContent = userData.phone || 'Not provided';
+                
+                // Format member since date
+                const memberSince = new Date(userData.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long'
+                });
+                document.getElementById('infoMemberSince').textContent = memberSince;
+                
+                // Set bio if available
+                if (userData.bio) {
+                    document.getElementById('profileBio').textContent = userData.bio;
+                }
+                
+                // Set rating if available
+                if (userData.rating) {
+                    document.getElementById('profileRating').textContent = userData.rating;
+                }
+                
+                // Set total reviews if available
+                if (userData.total_reviews) {
+                    document.getElementById('totalReviews').textContent = userData.total_reviews;
+                }
+                
+                // Calculate trip statistics
+                await calculateTripStats(userData.id);
+                
+                // Load preferences
+                loadPreferences(userData.preferences);
+                
+                // Load recent trips
+                await loadRecentTrips(userData.id);
+            }
+            
+            async function calculateTripStats(userId) {
+                try {
+                    // Get trips where user is driver
+                    const { data: driverTrips, error: driverError } = await supabase
+                        .from('trips')
+                        .select('id')
+                        .eq('driver_id', userId);
+                    
+                    if (driverError) throw driverError;
+                    
+                    // Get trips where user is passenger (through trip_requests)
+                    const { data: passengerRequests, error: passengerError } = await supabase
+                        .from('trip_requests')
+                        .select('trip_id')
+                        .eq('passenger_id', userId)
+                        .eq('status', 'accepted');
+                    
+                    if (passengerError) throw passengerError;
+                    
+                    const driverCount = driverTrips ? driverTrips.length : 0;
+                    const passengerCount = passengerRequests ? passengerRequests.length : 0;
+                    const totalCount = driverCount + passengerCount;
+                    
+                    document.getElementById('totalTrips').textContent = totalCount;
+                    document.getElementById('driverTrips').textContent = driverCount;
+                    document.getElementById('passengerTrips').textContent = passengerCount;
+                    
+                } catch (error) {
+                    console.error('Error calculating trip stats:', error);
+                    // Set default values if there's an error
+                    document.getElementById('totalTrips').textContent = '0';
+                    document.getElementById('driverTrips').textContent = '0';
+                    document.getElementById('passengerTrips').textContent = '0';
+                }
+            }
+            
+            function loadPreferences(preferences) {
+                const preferencesContainer = document.getElementById('preferencesList');
+                
+                // Default preferences if none are set
+                const defaultPreferences = [
+                    { icon: 'fas fa-music', text: 'Music Allowed', enabled: true },
+                    { icon: 'fas fa-smoking-ban', text: 'No Smoking', enabled: true },
+                    { icon: 'fas fa-paw', text: 'Pets Allowed', enabled: false },
+                    { icon: 'fas fa-suitcase', text: 'Luggage Space', enabled: true }
+                ];
+                
+                // Use user preferences if available, otherwise use defaults
+                const userPreferences = preferences || defaultPreferences;
+                
+                // Clear container
+                preferencesContainer.innerHTML = '';
+                
+                // Add preference items
+                userPreferences.forEach(pref => {
+                    const prefItem = document.createElement('div');
+                    prefItem.className = 'preference-item';
+                    
+                    if (!pref.enabled) {
+                        prefItem.style.opacity = '0.6';
+                    }
+                    
+                    prefItem.innerHTML = `
+                        <div class="preference-icon">
+                            <i class="${pref.icon}"></i>
+                        </div>
+                        <div class="preference-text">${pref.text}</div>
+                    `;
+                    
+                    preferencesContainer.appendChild(prefItem);
+                });
+            }
+            
+            async function loadRecentTrips(userId) {
+                try {
+                    const recentTripsContainer = document.getElementById('recentTrips');
+                    
+                    // Get recent trips where user is driver
+                    const { data: driverTrips, error: driverError } = await supabase
+                        .from('trips')
+                        .select('*')
+                        .eq('driver_id', userId)
+                        .order('created_at', { ascending: false })
+                        .limit(3);
+                    
+                    if (driverError) throw driverError;
+                    
+                    // Get recent trips where user is passenger
+                    const { data: passengerRequests, error: passengerError } = await supabase
+                        .from('trip_requests')
+                        .select('trips(*)')
+                        .eq('passenger_id', userId)
+                        .eq('status', 'accepted')
+                        .order('created_at', { ascending: false })
+                        .limit(3);
+                    
+                    if (passengerError) throw passengerError;
+                    
+                    // Combine and sort trips
+                    let allTrips = [];
+                    
+                    if (driverTrips) {
+                        allTrips = allTrips.concat(driverTrips.map(trip => ({ ...trip, role: 'driver' })));
+                    }
+                    
+                    if (passengerRequests) {
+                        allTrips = allTrips.concat(passengerRequests.map(req => ({ ...req.trips, role: 'passenger' })));
+                    }
+                    
+                    // Sort by creation date and take the 3 most recent
+                    allTrips.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    const recentTrips = allTrips.slice(0, 3);
+                    
+                    // Clear container
+                    recentTripsContainer.innerHTML = '';
+                    
+                    if (recentTrips.length === 0) {
+                        recentTripsContainer.innerHTML = `
+                            <div class="no-results" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                                <i class="fas fa-road" style="font-size: 3rem; color: #E5E7EB; margin-bottom: 1rem;"></i>
+                                <h3>No trips yet</h3>
+                                <p>Create your first trip or join one to get started!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Add trip cards
+                    recentTrips.forEach(trip => {
+                        const tripCard = createTripCard(trip);
+                        recentTripsContainer.appendChild(tripCard);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading recent trips:', error);
+                    const recentTripsContainer = document.getElementById('recentTrips');
+                    recentTripsContainer.innerHTML = `
+                        <div class="error-message" style="grid-column: 1 / -1;">
+                            Error loading recent trips
+                        </div>
+                    `;
+                }
+            }
+            
+            function createTripCard(trip) {
+                const tripDate = new Date(trip.departure_datetime);
+                const formattedDate = tripDate.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const formattedTime = tripDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+                
+                // Determine trip status based on departure time
+                const now = new Date();
+                let statusClass = '';
+                let statusText = '';
+                
+                if (tripDate < now) {
+                    statusClass = 'status-completed';
+                    statusText = 'Completed';
+                } else {
+                    statusClass = 'status-upcoming';
+                    statusText = 'Upcoming';
+                }
+                
+                const tripCard = document.createElement('div');
+                tripCard.className = 'trip-card';
+                
+                tripCard.innerHTML = `
+                    <div class="route">
+                        <i class="fas fa-route"></i>
+                        ${trip.start_location} → ${trip.end_location}
+                    </div>
+                    <div class="date-time">
+                        <i class="far fa-calendar"></i>
+                        ${formattedDate}, ${formattedTime}
+                    </div>
+                    <div class="trip-details">
+                        <div class="detail">
+                            <div class="detail-value">₹${trip.price_per_seat || trip.total_price}</div>
+                            <div class="detail-label">${trip.price_type === 'perSeat' ? 'Per Seat' : 'Total'}</div>
+                        </div>
+                        <div class="detail">
+                            <div class="detail-value">${trip.seats_available}</div>
+                            <div class="detail-label">Seats</div>
+                        </div>
+                        <div class="detail">
+                            <div class="detail-value">${trip.role === 'driver' ? 'Driver' : 'Passenger'}</div>
+                            <div class="detail-label">Role</div>
+                        </div>
+                    </div>
+                    <div class="trip-status ${statusClass}">${statusText}</div>
+                `;
+                
+                return tripCard;
+            }
+            
+            async function logoutUser() {
+                try {
+                    const { error } = await supabase.auth.signOut();
+                    
+                    if (error) {
+                        console.error('Error signing out:', error);
+                        showError('Error logging out');
+                        return;
+                    }
+                    
+                    // Redirect to login page or home page
+                    window.location.href = 'index.html';
+                    
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                    showError('An error occurred during logout');
+                }
+            }
+            
+            function getInitials(fullName) {
+                if (!fullName) return 'US';
+                return fullName
+                    .split(' ')
+                    .map(name => name[0])
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
+            }
+            
+            function getRandomColor() {
+                const colors = [
+                    '#0D9488', '#1E40AF', '#7C3AED', '#DC2626', 
+                    '#EA580C', '#65A30D', '#0891B2', '#9333EA'
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            function showError(message) {
+                loadingSpinner.style.display = 'none';
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
