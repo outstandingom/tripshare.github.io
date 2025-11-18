@@ -236,6 +236,8 @@
             display: flex;
             gap: 1rem;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .action-btn {
@@ -269,6 +271,15 @@
         .btn-secondary:hover {
             background-color: var(--primary);
             color: white;
+        }
+
+        .btn-vehicle {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-vehicle:hover {
+            background-color: #1e3a8a;
         }
 
         .profile-stats {
@@ -344,6 +355,68 @@
         }
 
         .info-value {
+            color: var(--text-light);
+        }
+
+        /* Vehicle Info Section */
+        .vehicle-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #F8FAFC;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .vehicle-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #E0F2FE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            font-size: 1.5rem;
+        }
+
+        .vehicle-details {
+            flex-grow: 1;
+        }
+
+        .vehicle-model {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .vehicle-plate {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .vehicle-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .vehicle-action-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .vehicle-action-btn:hover {
+            background-color: rgba(13, 148, 136, 0.1);
+        }
+
+        .no-vehicle {
+            text-align: center;
+            padding: 2rem;
             color: var(--text-light);
         }
 
@@ -633,6 +706,10 @@
                         <i class="fas fa-plus"></i>
                         Create Trip
                     </a>
+                    <a href="vehicle.html" class="action-btn btn-vehicle">
+                        <i class="fas fa-car"></i>
+                        Manage Vehicle
+                    </a>
                 </div>
                 
                 <div class="profile-stats">
@@ -648,6 +725,16 @@
                         <div class="stat-value" id="passengerTrips">0</div>
                         <div class="stat-label">As Passenger</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Information Section -->
+            <div class="profile-section">
+                <div class="section-header">
+                    <h2 class="section-title">Vehicle Information</h2>
+                </div>
+                <div id="vehicleInfoContainer">
+                    <!-- Vehicle information will be populated here -->
                 </div>
             </div>
 
@@ -864,6 +951,9 @@
                 // Calculate trip statistics
                 await calculateTripStats(userData.id);
                 
+                // Load vehicle information
+                await loadVehicleInfo(userData.id);
+                
                 // Load preferences
                 loadPreferences(userData.preferences);
                 
@@ -904,6 +994,62 @@
                     document.getElementById('totalTrips').textContent = '0';
                     document.getElementById('driverTrips').textContent = '0';
                     document.getElementById('passengerTrips').textContent = '0';
+                }
+            }
+            
+            async function loadVehicleInfo(userId) {
+                try {
+                    const vehicleContainer = document.getElementById('vehicleInfoContainer');
+                    
+                    // Get user's vehicle data
+                    const { data: vehicleData, error: vehicleError } = await supabase
+                        .from('vehicles')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .single();
+                    
+                    if (vehicleError) {
+                        if (vehicleError.code === 'PGRST116') {
+                            // No vehicle found - display message
+                            vehicleContainer.innerHTML = `
+                                <div class="no-vehicle">
+                                    <i class="fas fa-car" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <h3>No Vehicle Added</h3>
+                                    <p>Add a vehicle to start offering rides</p>
+                                </div>
+                            `;
+                        } else {
+                            throw vehicleError;
+                        }
+                    } else {
+                        // Vehicle found - display details
+                        vehicleContainer.innerHTML = `
+                            <div class="vehicle-info">
+                                <div class="vehicle-icon">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div class="vehicle-details">
+                                    <div class="vehicle-model">${vehicleData.make} ${vehicleData.model} (${vehicleData.year})</div>
+                                    <div class="vehicle-plate">License Plate: ${vehicleData.license_plate}</div>
+                                    <div class="vehicle-plate">Color: ${vehicleData.color}</div>
+                                </div>
+                                <div class="vehicle-actions">
+                                    <button class="vehicle-action-btn" onclick="window.location.href='vehicle.html'">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading vehicle info:', error);
+                    const vehicleContainer = document.getElementById('vehicleInfoContainer');
+                    vehicleContainer.innerHTML = `
+                        <div class="error-message">
+                            Error loading vehicle information
+                        </div>
+                    `;
                 }
             }
             
