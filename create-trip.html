@@ -312,6 +312,101 @@
             border-bottom: none;
         }
 
+        /* Vehicle Selection */
+        .vehicle-selection {
+            margin-bottom: 1.5rem;
+        }
+
+        .vehicle-card {
+            border: 2px solid #E5E7EB;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #F8FAFC;
+        }
+
+        .vehicle-card.selected {
+            border-color: var(--primary);
+            background-color: #F0FDFA;
+        }
+
+        .vehicle-card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .vehicle-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .vehicle-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+        }
+
+        .no-vehicle {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            background-color: #F8FAFC;
+            border-radius: var(--radius);
+            border: 2px dashed #E5E7EB;
+        }
+
+        .no-vehicle i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #E5E7EB;
+        }
+
+        .add-vehicle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .add-vehicle-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
         /* Buttons */
         .btn {
             padding: 0.75rem 1.5rem;
@@ -437,47 +532,6 @@
 
         .add-step:hover {
             background-color: #F0FDFA;
-        }
-
-        /* Vehicle Selection */
-        .vehicle-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .vehicle-option {
-            border: 2px solid #E5E7EB;
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .vehicle-option.selected {
-            border-color: var(--primary);
-            background-color: #F0FDFA;
-        }
-
-        .vehicle-icon {
-            font-size: 2rem;
-            color: var(--text-light);
-            margin-bottom: 1rem;
-        }
-
-        .vehicle-option.selected .vehicle-icon {
-            color: var(--primary);
-        }
-
-        .vehicle-name {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .vehicle-desc {
-            font-size: 0.9rem;
-            color: var(--text-light);
         }
 
         /* Preferences */
@@ -725,7 +779,7 @@
                 grid-template-columns: 1fr;
             }
 
-            .vehicle-options {
+            .vehicle-details {
                 grid-template-columns: 1fr;
             }
 
@@ -756,7 +810,7 @@
         </a>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="create-trip.html">Create Trip</a>
+            <a href="createtrip.html">Create Trip</a>
             <a href="search.html">Search Trips</a>
             <a href="alerts.html">Alerts</a>
             <a href="profile.html">Profile</a>
@@ -769,7 +823,7 @@
                     <i class="fas fa-user"></i>
                     <span>My Profile</span>
                 </a>
-                <a href="create-trip.html" class="dropdown-item">
+                <a href="createtrip.html" class="dropdown-item">
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Trip</span>
                 </a>
@@ -933,57 +987,23 @@
                     <div class="section-icon">
                         <i class="fas fa-car"></i>
                     </div>
-                    <h2 class="section-title">Vehicle Details</h2>
+                    <h2 class="section-title">Select Vehicle</h2>
                 </div>
 
-                <div class="vehicle-options" id="vehicleOptions">
-                    <div class="vehicle-option" data-type="car">
-                        <div class="vehicle-icon">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="vehicle-name">Car</div>
-                        <div class="vehicle-desc">4-5 seats, comfortable</div>
-                    </div>
-                    <div class="vehicle-option" data-type="suv">
-                        <div class="vehicle-icon">
-                            <i class="fas fa-truck"></i>
-                        </div>
-                        <div class="vehicle-name">SUV</div>
-                        <div class="vehicle-desc">5-7 seats, spacious</div>
-                    </div>
-                    <div class="vehicle-option" data-type="bike">
-                        <div class="vehicle-icon">
-                            <i class="fas fa-motorcycle"></i>
-                        </div>
-                        <div class="vehicle-name">Motorcycle</div>
-                        <div class="vehicle-desc">1 passenger, adventurous</div>
-                    </div>
-                    <div class="vehicle-option" data-type="other">
-                        <div class="vehicle-icon">
-                            <i class="fas fa-shuttle-van"></i>
-                        </div>
-                        <div class="vehicle-name">Other</div>
-                        <div class="vehicle-desc">Specify in description</div>
-                    </div>
+                <div class="vehicle-selection" id="vehicleSelection">
+                    <!-- Vehicle cards will be populated here -->
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="vehicleModel">Vehicle Model (Optional)</label>
-                        <input type="text" class="form-input" id="vehicleModel" placeholder="e.g., Honda City, Toyota Innova">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="seatsAvailable">Seats Available *</label>
-                        <select class="form-select" id="seatsAvailable" required>
-                            <option value="">Select seats</option>
-                            <option value="1">1 Seat</option>
-                            <option value="2">2 Seats</option>
-                            <option value="3">3 Seats</option>
-                            <option value="4">4 Seats</option>
-                            <option value="5">5+ Seats</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label" for="seatsAvailable">Seats Available *</label>
+                    <select class="form-select" id="seatsAvailable" required>
+                        <option value="">Select seats</option>
+                        <option value="1">1 Seat</option>
+                        <option value="2">2 Seats</option>
+                        <option value="3">3 Seats</option>
+                        <option value="4">4 Seats</option>
+                        <option value="5">5+ Seats</option>
+                    </select>
                 </div>
             </div>
 
@@ -1084,7 +1104,7 @@
             <i class="fas fa-search nav-icon"></i>
             <span>Search</span>
         </a>
-        <a href="create-trip.html" class="nav-item active">
+        <a href="createtrip.html" class="nav-item active">
             <i class="fas fa-plus-circle nav-icon"></i>
             <span>Create</span>
         </a>
@@ -1140,7 +1160,8 @@
                 intermediateStops: [],
                 markers: [],
                 routeLayer: null,
-                locationsConfirmed: false
+                locationsConfirmed: false,
+                selectedVehicle: null
             };
             
             // Initialize the page
@@ -1177,6 +1198,9 @@
                     // Initialize map
                     initializeMap();
                     
+                    // Load user's vehicles
+                    await loadUserVehicles(user.id);
+                    
                     // Set up event listeners
                     setupEventListeners();
                     
@@ -1191,6 +1215,132 @@
                 } catch (error) {
                     console.error('Error initializing page:', error);
                     showErrorPopup('An unexpected error occurred');
+                }
+            }
+            
+            // Load user's vehicles from database
+            async function loadUserVehicles(authId) {
+                try {
+                    // Get user data first to get user ID
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('auth_id', authId)
+                        .single();
+                    
+                    if (userError) throw userError;
+                    
+                    // Get user's vehicles
+                    const { data: vehicles, error: vehiclesError } = await supabase
+                        .from('vehicles')
+                        .select('*')
+                        .eq('user_id', userData.id)
+                        .eq('is_active', true);
+                    
+                    if (vehiclesError) throw vehiclesError;
+                    
+                    displayVehicles(vehicles || []);
+                    
+                } catch (error) {
+                    console.error('Error loading vehicles:', error);
+                    showErrorPopup('Error loading your vehicles');
+                }
+            }
+            
+            // Display user's vehicles for selection
+            function displayVehicles(vehicles) {
+                const vehicleSelection = document.getElementById('vehicleSelection');
+                
+                if (vehicles.length === 0) {
+                    vehicleSelection.innerHTML = `
+                        <div class="no-vehicle">
+                            <i class="fas fa-car"></i>
+                            <h3>No Vehicles Added</h3>
+                            <p>You need to add a vehicle before creating a trip</p>
+                            <a href="vehicle.html" class="add-vehicle-btn">
+                                <i class="fas fa-plus"></i> Add Vehicle
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                vehicleSelection.innerHTML = '';
+                
+                vehicles.forEach((vehicle, index) => {
+                    const vehicleCard = document.createElement('div');
+                    vehicleCard.className = 'vehicle-card';
+                    if (index === 0) {
+                        vehicleCard.classList.add('selected');
+                        window.routeState.selectedVehicle = vehicle;
+                    }
+                    
+                    vehicleCard.innerHTML = `
+                        <div class="vehicle-card-header">
+                            <div class="vehicle-info">
+                                <div class="vehicle-name">${vehicle.make} ${vehicle.model} (${vehicle.year})</div>
+                                <div class="vehicle-details">
+                                    <div class="vehicle-detail">
+                                        <span class="detail-label">Type</span>
+                                        <span class="detail-value">${vehicle.vehicle_type}</span>
+                                    </div>
+                                    <div class="vehicle-detail">
+                                        <span class="detail-label">Color</span>
+                                        <span class="detail-value">${vehicle.color}</span>
+                                    </div>
+                                    <div class="vehicle-detail">
+                                        <span class="detail-label">License Plate</span>
+                                        <span class="detail-value">${vehicle.license_plate}</span>
+                                    </div>
+                                    <div class="vehicle-detail">
+                                        <span class="detail-label">Seats</span>
+                                        <span class="detail-value">${vehicle.seating_capacity}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    vehicleCard.addEventListener('click', function() {
+                        // Remove selected class from all cards
+                        document.querySelectorAll('.vehicle-card').forEach(card => {
+                            card.classList.remove('selected');
+                        });
+                        
+                        // Add selected class to clicked card
+                        this.classList.add('selected');
+                        
+                        // Update selected vehicle
+                        window.routeState.selectedVehicle = vehicle;
+                        
+                        // Update seats available dropdown based on vehicle capacity
+                        updateSeatsAvailable(vehicle.seating_capacity);
+                    });
+                    
+                    vehicleSelection.appendChild(vehicleCard);
+                });
+                
+                // Set initial seats available based on first vehicle
+                if (vehicles.length > 0) {
+                    updateSeatsAvailable(vehicles[0].seating_capacity);
+                }
+            }
+            
+            // Update seats available dropdown based on vehicle capacity
+            function updateSeatsAvailable(maxSeats) {
+                const seatsSelect = document.getElementById('seatsAvailable');
+                seatsSelect.innerHTML = '<option value="">Select seats</option>';
+                
+                for (let i = 1; i <= maxSeats; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i === 1 ? '1 Seat' : `${i} Seats`;
+                    seatsSelect.appendChild(option);
+                }
+                
+                // Auto-select the maximum seats
+                if (maxSeats > 0) {
+                    seatsSelect.value = maxSeats;
                 }
             }
             
@@ -1226,15 +1376,6 @@
                 
                 // Add stop button
                 document.getElementById('addStopBtn').addEventListener('click', addIntermediateStop);
-                
-                // Vehicle selection
-                const vehicleOptions = document.querySelectorAll('.vehicle-option');
-                vehicleOptions.forEach(option => {
-                    option.addEventListener('click', function() {
-                        vehicleOptions.forEach(opt => opt.classList.remove('selected'));
-                        this.classList.add('selected');
-                    });
-                });
                 
                 // Price options
                 const priceOptions = document.querySelectorAll('.price-option');
@@ -1773,8 +1914,6 @@
                     const departureDate = document.getElementById('departureDate').value;
                     const departureTime = document.getElementById('departureTime').value;
                     const description = document.getElementById('description').value;
-                    const vehicleType = document.querySelector('.vehicle-option.selected').getAttribute('data-type');
-                    const vehicleModel = document.getElementById('vehicleModel').value;
                     const seatsAvailable = document.getElementById('seatsAvailable').value;
                     const priceType = document.querySelector('.price-option.selected').getAttribute('data-type');
                     const price = document.getElementById('price').value;
@@ -1788,6 +1927,12 @@
                     // Validate required fields
                     if (!startLocation || !endLocation || !departureDate || !departureTime || !seatsAvailable || !price) {
                         showErrorPopup('Please fill in all required fields');
+                        return;
+                    }
+                    
+                    // Validate vehicle selection
+                    if (!window.routeState.selectedVehicle) {
+                        showErrorPopup('Please select a vehicle for your trip');
                         return;
                     }
                     
@@ -1823,13 +1968,14 @@
                     // Create trip data object - matching your database schema
                     const tripData = {
                         driver_id: userData.id,
+                        vehicle_id: window.routeState.selectedVehicle.id,
                         start_location: startLocation,
                         end_location: endLocation,
                         route_coordinates: JSON.stringify(getRouteCoordinates()),
                         departure_datetime: `${departureDate} ${departureTime}:00`,
                         description: description,
-                        vehicle_type: vehicleType,
-                        vehicle_model: vehicleModel,
+                        vehicle_type: window.routeState.selectedVehicle.vehicle_type,
+                        vehicle_model: window.routeState.selectedVehicle.model,
                         seats_available: parseInt(seatsAvailable),
                         price_type: priceType,
                         price_per_seat: priceType === 'perSeat' ? parseFloat(price) : null,
