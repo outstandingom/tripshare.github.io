@@ -125,13 +125,24 @@ window.viewRequestDetails = function(requestId, type) {
     
     currentSelectedRequest = request;
     const trip = request.trips;
-    const user = type === 'sent' ? trip.users : request.users;
-    const userInitials = getInitials(user.full_name);
+    
+    // Get user info based on request type
+    let user, userType;
+    if (type === 'sent') {
+        user = trip.driver_info || trip.users;
+        userType = 'Driver';
+    } else {
+        user = request.passenger_info || request.users;
+        userType = 'Passenger';
+    }
+    
+    const userInitials = getInitials(user?.full_name || userType);
+    const userPhone = user?.phone || 'Phone not available';
     
     // Store contact info for modal
     currentContactInfo = {
-        phone: user.phone,
-        name: user.full_name
+        phone: userPhone,
+        name: user?.full_name || userType
     };
     
     const modalBody = document.getElementById('modalBody');
@@ -169,18 +180,18 @@ window.viewRequestDetails = function(requestId, type) {
         </div>
         
         <div style="margin-bottom: 1.5rem;">
-            <div style="font-weight: 600; margin-bottom: 0.5rem;">${type === 'sent' ? 'Driver' : 'Passenger'} Information</div>
+            <div style="font-weight: 600; margin-bottom: 0.5rem;">${userType} Information</div>
             <div class="user-info">
                 <div class="user-img">${userInitials}</div>
                 <div>
-                    <div class="user-name">${user.full_name}</div>
+                    <div class="user-name">${user?.full_name || userType}</div>
                     <div class="rating">
                         <i class="fas fa-star"></i>
-                        <span>${user.rating || '5.0'} (${user.total_trips || 0} trips)</span>
+                        <span>${user?.rating || '5.0'} (${user?.total_trips || 0} trips)</span>
                     </div>
                     <div class="contact-info">
                         <i class="fas fa-phone"></i>
-                        <span>${user.phone || 'Phone not available'}</span>
+                        <span>${userPhone}</span>
                     </div>
                 </div>
             </div>
@@ -213,9 +224,9 @@ window.viewRequestDetails = function(requestId, type) {
     }
     
     // Show contact button if phone is available
-    if (user.phone) {
+    if (userPhone !== 'Phone not available') {
         contactBtn.style.display = 'flex';
-        contactBtn.innerHTML = `<i class="fas fa-phone"></i> Contact ${type === 'sent' ? 'Driver' : 'Passenger'}`;
+        contactBtn.innerHTML = `<i class="fas fa-phone"></i> Contact ${userType}`;
     } else {
         contactBtn.style.display = 'none';
     }
@@ -226,7 +237,7 @@ window.viewRequestDetails = function(requestId, type) {
 };
 
 window.contactUser = function(phoneNumber, userName) {
-    if (!phoneNumber) {
+    if (!phoneNumber || phoneNumber === 'Phone not available') {
         alert('Phone number not available');
         return;
     }
@@ -322,13 +333,14 @@ async function loadSentRequests() {
     try {
         showLoadingState('sentRequestsGrid');
         
+        // First get trip requests sent by current user
         const { data: requests, error } = await supabase
             .from('trip_requests')
             .select(`
                 *,
                 trips(
                     *,
-                    users(full_name, phone, rating, total_trips)
+                    users!trips_driver_id_fkey(full_name, phone, rating, total_trips)
                 )
             `)
             .eq('passenger_id', currentUserId)
@@ -336,7 +348,18 @@ async function loadSentRequests() {
 
         if (error) throw error;
 
-        sentRequests = requests || [];
+        // Process the data to ensure we have proper user info
+        const processedRequests = (requests || []).map(request => {
+            const trip = request.trips;
+            if (trip && trip.users) {
+                // Rename users to driver_info for clarity
+                trip.driver_info = trip.users;
+                delete trip.users;
+            }
+            return request;
+        });
+
+        sentRequests = processedRequests;
         displaySentRequests(sentRequests);
         
     } catch (error) {
@@ -365,23 +388,30 @@ async function loadReceivedRequests() {
             return;
         }
 
-        // Get requests for user's trips
+        // Get requests for user's trips with passenger info
         const { data: requests, error } = await supabase
             .from('trip_requests')
             .select(`
                 *,
-                trips(
-                    *,
-                    users(full_name, phone, rating, total_trips)
-                ),
-                users(full_name, phone, rating, total_trips)
+                trips(*),
+                users!trip_requests_passenger_id_fkey(full_name, phone, rating, total_trips)
             `)
             .in('trip_id', tripIds)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        receivedRequests = requests || [];
+        // Process the data to ensure we have proper user info
+        const processedRequests = (requests || []).map(request => {
+            if (request.users) {
+                // Rename users to passenger_info for clarity
+                request.passenger_info = request.users;
+                delete request.users;
+            }
+            return request;
+        });
+
+        receivedRequests = processedRequests;
         displayReceivedRequests(receivedRequests);
         
     } catch (error) {
@@ -405,8 +435,9 @@ function displaySentRequests(requests) {
         const trip = request.trips;
         if (!trip) return;
         
-        const driver = trip.users;
-        const driverInitials = getInitials(driver?.full_name || 'Driver');
+        const driver = trip.driver_info || {};
+        const driverInitials = getInitials(driver.full_name || 'Driver');
+        const driverPhone = driver.phone || 'Phone not available';
         
         const requestCard = document.createElement('div');
         requestCard.className = 'alert-card';
@@ -446,17 +477,15 @@ function displaySentRequests(requests) {
             <div class="user-info">
                 <div class="user-img">${driverInitials}</div>
                 <div>
-                    <div class="user-name">${driver?.full_name || 'Driver'}</div>
+                    <div class="user-name">${driver.full_name || 'Driver'}</div>
                     <div class="rating">
                         <i class="fas fa-star"></i>
-                        <span>${driver?.rating || '5.0'} (${driver?.total_trips || 0})</span>
+                        <span>${driver.rating || '5.0'} (${driver.total_trips || 0})</span>
                     </div>
-                    ${driver?.phone ? `
                     <div class="contact-info">
                         <i class="fas fa-phone"></i>
-                        <span>${driver.phone}</span>
+                        <span>${driverPhone}</span>
                     </div>
-                    ` : ''}
                 </div>
             </div>
             
@@ -471,8 +500,8 @@ function displaySentRequests(requests) {
                         <i class="fas fa-check-circle"></i> Mark Complete
                     </button>
                 ` : ''}
-                ${driver?.phone ? `
-                    <button class="action-btn btn-contact" onclick="contactUser('${driver.phone}', '${driver?.full_name || 'Driver'}')">
+                ${driverPhone !== 'Phone not available' ? `
+                    <button class="action-btn btn-contact" onclick="contactUser('${driverPhone}', '${driver.full_name || 'Driver'}')">
                         <i class="fas fa-phone"></i> Contact
                     </button>
                 ` : ''}
@@ -500,8 +529,9 @@ function displayReceivedRequests(requests) {
         const trip = request.trips;
         if (!trip) return;
         
-        const passenger = request.users;
-        const passengerInitials = getInitials(passenger?.full_name || 'Passenger');
+        const passenger = request.passenger_info || {};
+        const passengerInitials = getInitials(passenger.full_name || 'Passenger');
+        const passengerPhone = passenger.phone || 'Phone not available';
         
         const requestCard = document.createElement('div');
         requestCard.className = 'alert-card';
@@ -541,17 +571,15 @@ function displayReceivedRequests(requests) {
             <div class="user-info">
                 <div class="user-img">${passengerInitials}</div>
                 <div>
-                    <div class="user-name">${passenger?.full_name || 'Passenger'}</div>
+                    <div class="user-name">${passenger.full_name || 'Passenger'}</div>
                     <div class="rating">
                         <i class="fas fa-star"></i>
-                        <span>${passenger?.rating || '5.0'} (${passenger?.total_trips || 0})</span>
+                        <span>${passenger.rating || '5.0'} (${passenger.total_trips || 0})</span>
                     </div>
-                    ${passenger?.phone ? `
                     <div class="contact-info">
                         <i class="fas fa-phone"></i>
-                        <span>${passenger.phone}</span>
+                        <span>${passengerPhone}</span>
                     </div>
-                    ` : ''}
                 </div>
             </div>
             
@@ -563,8 +591,8 @@ function displayReceivedRequests(requests) {
                     <button class="action-btn btn-reject" onclick="rejectRequest('${request.id}')">
                         <i class="fas fa-times"></i> Reject
                     </button>
-                    ${passenger?.phone ? `
-                    <button class="action-btn btn-contact" onclick="contactUser('${passenger.phone}', '${passenger?.full_name || 'Passenger'}')">
+                    ${passengerPhone !== 'Phone not available' ? `
+                    <button class="action-btn btn-contact" onclick="contactUser('${passengerPhone}', '${passenger.full_name || 'Passenger'}')">
                         <i class="fas fa-phone"></i> Contact
                     </button>
                     ` : ''}
@@ -579,8 +607,8 @@ function displayReceivedRequests(requests) {
                             <i class="fas fa-check-circle"></i> Mark Complete
                         </button>
                     ` : ''}
-                    ${passenger?.phone ? `
-                    <button class="action-btn btn-contact" onclick="contactUser('${passenger.phone}', '${passenger?.full_name || 'Passenger'}')">
+                    ${passengerPhone !== 'Phone not available' ? `
+                    <button class="action-btn btn-contact" onclick="contactUser('${passengerPhone}', '${passenger.full_name || 'Passenger'}')">
                         <i class="fas fa-phone"></i> Contact
                     </button>
                     ` : ''}
