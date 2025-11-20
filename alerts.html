@@ -400,6 +400,15 @@
             font-size: 0.9rem;
         }
 
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
         .alert-actions {
             display: flex;
             gap: 0.8rem;
@@ -463,6 +472,15 @@
 
         .btn-view:hover {
             background-color: var(--primary-dark);
+        }
+
+        .btn-contact {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .btn-contact:hover {
+            background-color: #2563EB;
         }
 
         /* No Results Message */
@@ -600,6 +618,15 @@
 
         .btn-secondary:hover {
             background-color: #D1D5DB;
+        }
+
+        .btn-contact-modal {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .btn-contact-modal:hover {
+            background-color: #2563EB;
         }
 
         /* Responsive Design */
@@ -771,6 +798,9 @@
                 <button class="btn btn-primary" id="confirmAction">
                     <i class="fas fa-check"></i> Confirm
                 </button>
+                <button class="btn btn-contact-modal" id="contactAction" style="display: none;">
+                    <i class="fas fa-phone"></i> Contact
+                </button>
             </div>
         </div>
     </div>
@@ -782,7 +812,7 @@
         </a>
         <a href="search.html" class="nav-item">
             <i class="fas fa-search nav-icon"></i>
-            <span>Sarch</san>
+            <span>Search</span>
         </a>
         <a href="create-trip.html" class="nav-item">
             <i class="fas fa-plus-circle nav-icon"></i>
