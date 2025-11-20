@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripShare - Share Rides, Save Costs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --primary: #0D9488;
+            --primary-dark: #0f766e;
+            --secondary: #1E40AF;
+            --text: #374151;
+            --text-light: #6B7280;
+            --white: #FFFFFF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo i {
+            margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--white);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.8rem 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 2rem 5%;
+            text-align: center;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-box {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 1rem;
+        }
+
+        .search-field {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .search-field label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .search-field input, .search-field select {
+            padding: 0.8rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .search-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            align-self: flex-end;
+            margin-bottom: 0.3rem;
+            height: 45px;
+            min-width: 120px;
+        }
+
+        .search-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            padding: 1.5rem 5%;
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .quick-actions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            min-width: 100px;
+            text-decoration: none;
+            color: var(--text);
+            transition: transform 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #F0FDFA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .action-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Trips Section */
+        .trips-section {
+            padding: 2rem 5%;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .trips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .trip-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            transition: transform 0.3s;
+            position: relative;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .route {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-time {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trip-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .driver-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .driver-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .driver-name {
+            font-weight: 500;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: var(--warning);
+            font-size: 0.9rem;
+        }
+
+        .book-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .book-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* No Results Message */
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+            grid-column: 1 / -1;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #E5E7EB;
+        }
+
+        /* Safety Features */
+        .safety-features {
+            padding: 2rem 5%;
+            background-color: var(--white);
+        }
+
+        .safety-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .safety-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #F8FAFC;
+            border-radius: var(--radius);
+        }
+
+        .safety-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #F0FDFA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .safety-text {
+            font-weight: 500;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 2rem 5%;
+            background-color: var(--bg-color);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .step {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #F0FDFA;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .step-desc {
+            color: var(--text-light);
+        }
+
+        /* Create Trip Button */
+        .create-trip-btn {
+            position: fixed;
+            bottom: 5rem;
+            right: 1.5rem;
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+            text-decoration: none;
+        }
+
+        .create-trip-btn:hover {
+            background-color: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--white);
+            padding: 2rem 5%;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .search-box {
+                grid-template-columns: 1fr;
+            }
+
+            .trips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps, .safety-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <i class="fas fa-car"></i>
+            TripShare
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="createtrip.html">Create Trip</a>
+            <a href="search.html">Search Trips</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="profile">
+            <div class="profile-img" id="navAvatar">AS</div>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </nav>
+
+    <!-- Hero / Search Section -->
+    <section class="hero">
+        <h1>Find Affordable Rides & Share Your Journey</h1>
+        <p>Connect with fellow travelers, save costs, and make your trips more enjoyable.</p>
+        <div class="search-box">
+            <div class="search-field">
+                <label for="from">From</label>
+                <input type="text" id="from" placeholder="Enter city">
+            </div>
+            <div class="search-field">
+                <label for="to">To</label>
+                <input type="text" id="to" placeholder="Enter city">
+            </div>
+            <div class="search-field">
+                <label for="date">Date</label>
+                <input type="date" id="date">
+            </div>
+            <button class="search-btn" id="findRidesBtn">
+                <i class="fas fa-search"></i> Find Rides
+            </button>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+        <a href="createtrip.html" class="action-btn">
+            <div class="action-icon">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="action-text">Create Trip</div>
+        </a>
+        <a href="search.html" class="action-btn">
+            <div class="action-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="action-text">Find Rides</div>
+        </a>
+        <a href="my-trips.html" class="action-btn">
+            <div class="action-icon">
+                <i class="fas fa-road"></i>
+            </div>
+            <div class="action-text">My Trips</div>
+        </a>
+        <a href="vehicle.html" class="action-btn">
+            <div class="action-icon">
+                <i class="fas fa-car"></i>
+            </div>
+            <div class="action-text">My Vehicle</div>
+        </a>
+        <a href="alerts.html" class="action-btn">
+            <div class="action-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="action-text">Alerts</div>
+        </a>
+        <a href="profile.html" class="action-btn">
+            <div class="action-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="action-text">Profile</div>
+        </a>
+    </section>
+
+    <!-- Available Trips Section -->
+    <section class="trips-section">
+        <div class="section-header">
+            <h2 class="section-title">Available Trips</h2>
+            <a href="search.html" class="view-all">View All</a>
+        </div>
+        <div class="trips-grid" id="tripsGrid">
+            <div class="loading">
+                <div>
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading available trips...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety Features -->
+    <section class="safety-features">
+        <h2 class="section-title">Your Safety is Our Priority</h2>
+        <div class="safety-grid">
+            <div class="safety-item">
+                <div class="safety-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div class="safety-text">Verified Profiles</div>
+            </div>
+            <div class="safety-item">
+                <div class="safety-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="safety-text">Trip Insurance</div>
+            </div>
+            <div class="safety-item">
+                <div class="safety-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="safety-text">ID Verification</div>
+            </div>
+            <div class="safety-item">
+                <div class="safety-icon">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="safety-text">24/7 Support</div>
+            </div>
+            <div class="safety-item">
+                <div class="safety-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="safety-text">Live Tracking</div>
+            </div>
+            <div class="safety-item">
+                <div class="safety-icon">
+                    <i class="fas fa-female"></i>
+                </div>
+                <div class="safety-text">Women-Only Trips</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <h2 class="section-title" style="text-align: center;">How TripShare Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <h3 class="step-title">Post a Trip</h3>
+                <p class="step-desc">Share your travel plans, available seats, and cost to split.</p>
+            </div>
+            <div class="step">
+                <div class="step-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="step-title">Find Co-Travelers</h3>
+                <p class="step-desc">Connect with people going the same way and share the ride.</p>
+            </div>
+            <div class="step">
+                <div class="step-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3 class="step-title">Share Cost</h3>
+                <p class="step-desc">Split travel expenses and save money on your journey.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Create Trip Button -->
+    <a href="createtrip.html" class="create-trip-btn">
+        <i class="fas fa-plus"></i>
+    </a>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <i class="fas fa-search nav-icon"></i>
+            <span>Search</span>
+        </a>
+        <a href="createtrip.html" class="nav-item">
+            <i class="fas fa-plus-circle nav-icon"></i>
+            <span>Create</span>
+        </a>
+        <a href="alerts.html" class="nav-item">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 TripShare. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://oimtrjuxagzvmbllgehi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
+
+        // Initialize Supabase client
+        let supabase;
+
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true,
+                    storage: window.localStorage
+                }
+            });
+            console.log('Supabase client initialized successfully');
+            window.supabaseClient = supabase;
+        } catch (error) {
+            console.error('Error initializing Supabase client:', error);
+            window.supabaseClient = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the page
+            initializePage();
+
+            // Search button event listener
+            document.getElementById('findRidesBtn').addEventListener('click', function() {
+                window.location.href = 'search.html';
+            });
+
+            async function initializePage() {
+                try {
+                    // Check if user is authenticated
+                    const { data: { user }, error: authError } = await supabase.auth.getUser();
+                    
+                    if (authError || !user) {
+                        // User not logged in, show default content
+                        loadDefaultTrips();
+                        return;
+                    }
+
+                    // User is logged in, load real data
+                    await loadActiveTrips();
+                    
+                } catch (error) {
+                    console.error('Error initializing page:', error);
+                    loadDefaultTrips();
+                }
+            }
+
+            async function loadActiveTrips() {
+                try {
+                    const { data: trips, error } = await supabase
+                        .from('trips')
+                        .select(`
+                            *,
+                            trip_route_stops(*),
+                            users(full_name, rating, profile_picture)
+                        `)
+                        .eq('status', 'active')
+                        .gte('seats_available', 1)
+                        .order('created_at', { ascending: false })
+                        .limit(3);
+
+                    if (error) throw error;
+
+                    if (trips && trips.length > 0) {
+                        displayTrips(trips);
+                    } else {
+                        loadDefaultTrips();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading trips:', error);
+                    loadDefaultTrips();
+                }
+            }
+
+            function displayTrips(trips) {
+                const tripsGrid = document.getElementById('tripsGrid');
+                tripsGrid.innerHTML = '';
+                
+                trips.forEach(trip => {
+                    const tripCard = document.createElement('div');
+                    tripCard.className = 'trip-card';
+                    
+                    const price = trip.price_per_seat || trip.total_price;
+                    const driverInitials = getInitials(trip.users.full_name);
+                    
+                    tripCard.innerHTML = `
+                        <div class="route">
+                            <i class="fas fa-route"></i>
+                            ${trip.start_location} → ${trip.end_location}
+                        </div>
+                        <div class="date-time">
+                            <i class="far fa-calendar"></i>
+                            ${formatDateTime(trip.departure_datetime)}
+                        </div>
+                        <div class="trip-details">
+                            <div class="detail">
+                                <div class="detail-value">${trip.seats_available}</div>
+                                <div class="detail-label">Seats Left</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">₹${price}</div>
+                                <div class="detail-label">${trip.price_type === 'perSeat' ? 'Per Seat' : 'Total'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">${trip.vehicle_type}</div>
+                                <div class="detail-label">Vehicle</div>
+                            </div>
+                        </div>
+                        <div class="driver-info">
+                            <div class="driver-img">${driverInitials}</div>
+                            <div>
+                                <div class="driver-name">${trip.users.full_name}</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>${trip.users.rating || '5.0'} (${trip.users.total_trips || 0})</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="book-btn" onclick="viewTripDetails('${trip.id}')">View Details</button>
+                    `;
+                    
+                    tripsGrid.appendChild(tripCard);
+                });
+            }
+
+            function loadDefaultTrips() {
+                const tripsGrid = document.getElementById('tripsGrid');
+                tripsGrid.innerHTML = `
+                    <!-- Default Trip Card 1 -->
+                    <div class="trip-card">
+                        <div class="route">
+                            <i class="fas fa-route"></i>
+                            Bhopal → Chhindwara
+                        </div>
+                        <div class="date-time">
+                            <i class="far fa-calendar"></i>
+                            Today, 3:00 PM
+                        </div>
+                        <div class="trip-details">
+                            <div class="detail">
+                                <div class="detail-value">3</div>
+                                <div class="detail-label">Seats Left</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">₹125</div>
+                                <div class="detail-label">Per Seat</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">4h</div>
+                                <div class="detail-label">Duration</div>
+                            </div>
+                        </div>
+                        <div class="driver-info">
+                            <div class="driver-img">RK</div>
+                            <div>
+                                <div class="driver-name">Rahul Kumar</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>4.8 (42)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="book-btn" onclick="window.location.href='search.html'">View Details</button>
+                    </div>
+
+                    <!-- Default Trip Card 2 -->
+                    <div class="trip-card">
+                        <div class="route">
+                            <i class="fas fa-route"></i>
+                            Indore → Bhopal
+                        </div>
+                        <div class="date-time">
+                            <i class="far fa-calendar"></i>
+                            Tomorrow, 9:00 AM
+                        </div>
+                        <div class="trip-details">
+                            <div class="detail">
+                                <div class="detail-value">2</div>
+                                <div class="detail-label">Seats Left</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">₹200</div>
+                                <div class="detail-label">Per Seat</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">3h</div>
+                                <div class="detail-label">Duration</div>
+                            </div>
+                        </div>
+                        <div class="driver-info">
+                            <div class="driver-img">PS</div>
+                            <div>
+                                <div class="driver-name">Priya Singh</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>4.9 (67)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="book-btn" onclick="window.location.href='search.html'">View Details</button>
+                    </div>
+
+                    <!-- Default Trip Card 3 -->
+                    <div class="trip-card">
+                        <div class="route">
+                            <i class="fas fa-route"></i>
+                            Jabalpur → Nagpur
+                        </div>
+                        <div class="date-time">
+                            <i class="far fa-calendar"></i>
+                            Friday, 2:30 PM
+                        </div>
+                        <div class="trip-details">
+                            <div class="detail">
+                                <div class="detail-value">1</div>
+                                <div class="detail-label">Seats Left</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">₹180</div>
+                                <div class="detail-label">Per Seat</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-value">5h</div>
+                                <div class="detail-label">Duration</div>
+                            </div>
+                        </div>
+                        <div class="driver-info">
+                            <div class="driver-img">AS</div>
+                            <div>
+                                <div class="driver-name">Amit Sharma</div>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <span>4.7 (35)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="book-btn" onclick="window.location.href='search.html'">View Details</button>
+                    </div>
+                `;
+            }
+
+            function formatDateTime(datetimeString) {
+                try {
+                    const date = new Date(datetimeString);
+                    return date.toLocaleDateString('en-IN') + ' ' + date.toLocaleTimeString('en-IN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                } catch (e) {
+                    return 'Invalid date';
+                }
+            }
+
+            function getInitials(name) {
+                if (!name) return 'US';
+                return name
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
+            }
+
+            // Make viewTripDetails available globally
+            window.viewTripDetails = function(tripId) {
+                window.location.href = `search.html?trip=${tripId}`;
+            };
+        });
+    </script>
+</body>
+</html>
