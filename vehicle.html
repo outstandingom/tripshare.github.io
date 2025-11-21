@@ -466,21 +466,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pbXRyanV4YWd6dm1ibGxnZWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Nzk5NzksImV4cCI6MjA3ODM1NTk3OX0.hAQ7DQFfOAU5tMDj4Zc_4MyXVl10dhquQwd70OT46tg';
 
         // Initialize Supabase client
-        let supabase;
-
-        try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                auth: {
-                    autoRefreshToken: true,
-                    persistSession: true,
-                    detectSessionInUrl: true,
-                    storage: window.localStorage
-                }
-            });
-            console.log('Supabase client initialized successfully');
-        } catch (error) {
-            console.error('Error initializing Supabase client:', error);
-        }
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         document.addEventListener('DOMContentLoaded', function() {
             const loadingSpinner = document.getElementById('loadingSpinner');
@@ -497,9 +483,10 @@
             let currentVehicleId = null;
             let isEditing = false;
             let currentVehicleData = null;
+            let currentUserId = null;
             
             // Initialize page
-            loadVehicleData();
+            initializePage();
             
             // Form submission
             vehicleForm.addEventListener('submit', async function(e) {
@@ -541,7 +528,7 @@
                 });
             }
             
-            async function loadVehicleData() {
+            async function initializePage() {
                 try {
                     loadingSpinner.style.display = 'flex';
                     
@@ -554,7 +541,9 @@
                         return;
                     }
                     
-                    // Fetch user data to get user ID
+                    console.log('User authenticated:', user.id);
+                    
+                    // Get user ID from users table
                     const { data: userData, error: userError } = await supabase
                         .from('users')
                         .select('id')
@@ -563,8 +552,42 @@
                     
                     if (userError) {
                         console.error('Error fetching user data:', userError);
-                        showError('Error loading user information');
-                        loadingSpinner.style.display = 'none';
+                        
+                        // Try alternative approach - check if we can get user by email
+                        const { data: userByEmail, error: emailError } = await supabase
+                            .from('users')
+                            .select('id')
+                            .eq('email', user.email)
+                            .single();
+                            
+                        if (emailError || !userByEmail) {
+                            showError('User profile not found. Please complete your profile first.');
+                            loadingSpinner.style.display = 'none';
+                            return;
+                        }
+                        
+                        currentUserId = userByEmail.id;
+                    } else {
+                        currentUserId = userData.id;
+                    }
+                    
+                    console.log('Current user ID:', currentUserId);
+                    
+                    // Load vehicle data
+                    await loadVehicleData();
+                    
+                } catch (error) {
+                    console.error('Error initializing page:', error);
+                    showError('Error loading page');
+                    loadingSpinner.style.display = 'none';
+                }
+            }
+            
+            async function loadVehicleData() {
+                try {
+                    if (!currentUserId) {
+                        console.error('No user ID available');
+                        showError('User not found');
                         return;
                     }
                     
@@ -572,20 +595,25 @@
                     const { data: vehicleData, error: vehicleError } = await supabase
                         .from('vehicles')
                         .select('*')
-                        .eq('user_id', userData.id)
+                        .eq('user_id', currentUserId)
                         .eq('is_active', true)
                         .single();
+                    
+                    console.log('Vehicle data response:', vehicleData, vehicleError);
                     
                     if (vehicleError) {
                         if (vehicleError.code === 'PGRST116') {
                             // No active vehicle found - show form
+                            console.log('No active vehicle found, showing form');
                             existingVehicle.style.display = 'none';
                             vehicleFormContainer.style.display = 'block';
                         } else {
+                            console.error('Error fetching vehicle:', vehicleError);
                             throw vehicleError;
                         }
                     } else {
                         // Vehicle found - show existing vehicle
+                        console.log('Vehicle found:', vehicleData);
                         currentVehicleId = vehicleData.id;
                         currentVehicleData = vehicleData;
                         displayVehicleData(vehicleData);
@@ -634,26 +662,8 @@
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                     
-                    // Check if user is authenticated
-                    const { data: { user }, error: authError } = await supabase.auth.getUser();
-                    
-                    if (authError || !user) {
-                        showError('Please log in to save vehicle information');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Vehicle';
-                        return;
-                    }
-                    
-                    // Get user ID
-                    const { data: userData, error: userError } = await supabase
-                        .from('users')
-                        .select('id')
-                        .eq('auth_id', user.id)
-                        .single();
-                    
-                    if (userError) {
-                        console.error('Error fetching user data:', userError);
-                        showError('Error saving vehicle information');
+                    if (!currentUserId) {
+                        showError('User not found. Please log in again.');
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Vehicle';
                         return;
@@ -661,7 +671,7 @@
                     
                     // Get form data
                     const vehicleData = {
-                        user_id: userData.id,
+                        user_id: currentUserId,
                         make: document.getElementById('vehicleMake').value.trim(),
                         model: document.getElementById('vehicleModel').value.trim(),
                         year: parseInt(document.getElementById('vehicleYearInput').value),
@@ -671,6 +681,8 @@
                         seats_capacity: parseInt(document.getElementById('vehicleSeatsInput').value),
                         is_active: true
                     };
+                    
+                    console.log('Saving vehicle data:', vehicleData);
                     
                     // Validate data
                     if (!validateVehicleData(vehicleData)) {
@@ -683,34 +695,42 @@
                     
                     if (currentVehicleId && isEditing) {
                         // Update existing vehicle
+                        console.log('Updating existing vehicle:', currentVehicleId);
                         result = await supabase
                             .from('vehicles')
                             .update(vehicleData)
                             .eq('id', currentVehicleId);
                     } else {
                         // Insert new vehicle
-                        // First, deactivate any existing active vehicles
+                        console.log('Creating new vehicle');
+                        
+                        // First, deactivate any existing active vehicles for this user
                         await supabase
                             .from('vehicles')
                             .update({ is_active: false })
-                            .eq('user_id', userData.id)
+                            .eq('user_id', currentUserId)
                             .eq('is_active', true);
                         
                         // Then insert new vehicle
                         result = await supabase
                             .from('vehicles')
-                            .insert([vehicleData]);
+                            .insert([vehicleData])
+                            .select();
                     }
                     
-                    const { error } = result;
+                    const { data, error } = result;
+                    
+                    console.log('Save result:', data, error);
                     
                     if (error) {
                         console.error('Error saving vehicle:', error);
                         
                         if (error.code === '23505') {
                             showError('A vehicle with this license plate already exists');
+                        } else if (error.message.includes('violates foreign key constraint')) {
+                            showError('User not found. Please complete your profile first.');
                         } else {
-                            showError('Error saving vehicle information');
+                            showError(`Error saving vehicle: ${error.message}`);
                         }
                         
                         submitBtn.disabled = false;
@@ -718,17 +738,22 @@
                         return;
                     }
                     
-                    // Show success message and redirect
+                    // Show success message
                     showSuccess('Vehicle information saved successfully!');
                     
-                    // Redirect to profile page after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'profile.html';
-                    }, 2000);
+                    // If this was a new vehicle creation, update the current vehicle ID
+                    if (!currentVehicleId && data && data.length > 0) {
+                        currentVehicleId = data[0].id;
+                    }
+                    
+                    // Reload vehicle data to update the UI
+                    setTimeout(async () => {
+                        await loadVehicleData();
+                    }, 1500);
                     
                 } catch (error) {
                     console.error('Error saving vehicle:', error);
-                    showError('An unexpected error occurred');
+                    showError('An unexpected error occurred: ' + error.message);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Vehicle';
                 }
@@ -745,7 +770,7 @@
                     
                     if (error) {
                         console.error('Error deactivating vehicle:', error);
-                        showError('Error deactivating vehicle');
+                        showError('Error deactivating vehicle: ' + error.message);
                         return;
                     }
                     
@@ -765,13 +790,13 @@
             function validateVehicleData(data) {
                 // Check if year is valid
                 const currentYear = new Date().getFullYear();
-                if (data.year < 1900 || data.year > currentYear + 1) {
+                if (isNaN(data.year) || data.year < 1900 || data.year > currentYear + 1) {
                     showError('Please enter a valid vehicle year');
                     return false;
                 }
                 
                 // Check if seats capacity is valid
-                if (data.seats_capacity < 1 || data.seats_capacity > 20) {
+                if (isNaN(data.seats_capacity) || data.seats_capacity < 1 || data.seats_capacity > 20) {
                     showError('Please enter a valid seating capacity (1-20)');
                     return false;
                 }
@@ -783,7 +808,7 @@
                 }
                 
                 // Check if license plate format is valid (basic validation)
-                if (data.license_plate.length < 3) {
+                if (data.license_plate.length < 2) {
                     showError('Please enter a valid license plate');
                     return false;
                 }
@@ -795,12 +820,22 @@
                 successMessage.style.display = 'flex';
                 errorMessage.style.display = 'none';
                 document.getElementById('successText').textContent = message;
+                
+                // Auto-hide success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
             }
             
             function showError(message) {
                 errorMessage.style.display = 'flex';
                 successMessage.style.display = 'none';
                 document.getElementById('errorText').textContent = message;
+                
+                // Auto-hide error message after 5 seconds
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
             }
         });
     </script>
