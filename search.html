@@ -19,6 +19,7 @@
             --text-light: #6B7280;
             --white: #FFFFFF;
             --success: #10B981;
+            --error: #EF4444;
             --warning: #F59E0B;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 12px;
@@ -85,6 +86,7 @@
             align-items: center;
             gap: 0.8rem;
             cursor: pointer;
+            position: relative;
         }
 
         .profile-img {
@@ -97,6 +99,42 @@
             justify-content: center;
             color: white;
             font-weight: 600;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #F8FAFC;
+        }
+
+        .dropdown-item.logout {
+            color: var(--error);
+            border-top: 1px solid #E5E7EB;
         }
 
         /* Bottom Navigation Bar */
@@ -669,13 +707,32 @@
         </a>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="createtrip.html">Create Trip</a>
+            <a href="create-trip.html">Create Trip</a>
             <a href="search.html">Search Trips</a>
+            <a href="alerts.html">Alerts</a>
             <a href="profile.html">Profile</a>
         </div>
-        <div class="profile">
+        <div class="profile" id="profileDropdown">
             <div class="profile-img" id="navAvatar">AS</div>
             <i class="fas fa-chevron-down"></i>
+            <div class="profile-dropdown" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="create-trip.html" class="dropdown-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create Trip</span>
+                </a>
+                <a href="alerts.html" class="dropdown-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+                <a href="#" class="dropdown-item logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -851,8 +908,50 @@
                 maxPrice: null
             };
 
+            // DOM Elements
+            const profileDropdown = document.getElementById('profileDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const logoutBtn = document.getElementById('logoutBtn');
+
             // Initialize the page
             initializePage();
+
+            // Profile dropdown functionality
+            profileDropdown.addEventListener('click', function() {
+                dropdownMenu.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!profileDropdown.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await logoutUser();
+            });
+            
+            async function logoutUser() {
+                try {
+                    const { error } = await supabase.auth.signOut();
+                    
+                    if (error) {
+                        console.error('Error signing out:', error);
+                        showError('Error logging out');
+                        return;
+                    }
+                    
+                    // Redirect to login page
+                    window.location.href = 'login.html';
+                    
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                    showError('An error occurred during logout');
+                }
+            }
 
             async function initializePage() {
                 try {
@@ -863,6 +962,9 @@
                         showError('Please log in to search trips');
                         return;
                     }
+
+                    // Update profile avatar with user initials
+                    await updateProfileAvatar(user.id);
 
                     // Initialize map
                     initializeMap();
@@ -877,6 +979,34 @@
                     console.error('Error initializing page:', error);
                     showError('An unexpected error occurred');
                 }
+            }
+
+            // Update profile avatar with user initials
+            async function updateProfileAvatar(authId) {
+                try {
+                    const { data: userData, error } = await supabase
+                        .from('users')
+                        .select('full_name')
+                        .eq('auth_id', authId)
+                        .single();
+                    
+                    if (!error && userData) {
+                        const initials = getInitials(userData.full_name);
+                        document.getElementById('navAvatar').textContent = initials;
+                    }
+                } catch (error) {
+                    console.error('Error updating profile avatar:', error);
+                }
+            }
+
+            function getInitials(fullName) {
+                if (!fullName) return 'US';
+                return fullName
+                    .split(' ')
+                    .map(name => name[0])
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
             }
 
             function initializeMap() {
@@ -1391,16 +1521,6 @@
                     hour: '2-digit', 
                     minute: '2-digit' 
                 });
-            }
-
-            function getInitials(name) {
-                if (!name) return 'US';
-                return name
-                    .split(' ')
-                    .map(word => word[0])
-                    .join('')
-                    .toUpperCase()
-                    .substring(0, 2);
             }
 
             function showError(message) {
