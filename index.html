@@ -18,6 +18,7 @@
             --white: #FFFFFF;
             --success: #10B981;
             --warning: #F59E0B;
+            --error: #EF4444;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius: 12px;
         }
@@ -46,7 +47,7 @@
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .logo {
@@ -83,6 +84,7 @@
             align-items: center;
             gap: 0.8rem;
             cursor: pointer;
+            position: relative;
         }
 
         .profile-img {
@@ -95,6 +97,106 @@
             justify-content: center;
             color: white;
             font-weight: 600;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 0.5rem 0;
+            min-width: 180px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #F8FAFC;
+        }
+
+        .dropdown-item.logout {
+            color: var(--error);
+            border-top: 1px solid #E5E7EB;
+        }
+
+        /* Popup Messages */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            display: none;
+        }
+
+        .popup-message {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .popup-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .popup-success .popup-icon {
+            color: var(--success);
+        }
+
+        .popup-error .popup-icon {
+            color: var(--error);
+        }
+
+        .popup-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .popup-text {
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .popup-btn {
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background-color: var(--primary);
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .popup-btn:hover {
+            background-color: var(--primary-dark);
         }
 
         /* Bottom Navigation Bar */
@@ -586,15 +688,57 @@
         </a>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="createtrip.html">Create Trip</a>
+            <a href="create-trip.html">Create Trip</a>
             <a href="search.html">Search Trips</a>
+            <a href="alerts.html">Alerts</a>
             <a href="profile.html">Profile</a>
         </div>
-        <div class="profile">
+        <div class="profile" id="profileDropdown">
             <div class="profile-img" id="navAvatar">AS</div>
             <i class="fas fa-chevron-down"></i>
+            <div class="profile-dropdown" id="dropdownMenu">
+                <a href="profile.html" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="create-trip.html" class="dropdown-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create Trip</span>
+                </a>
+                <a href="alerts.html" class="dropdown-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+                <a href="#" class="dropdown-item logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
         </div>
     </nav>
+
+    <!-- Popup Messages -->
+    <div class="popup-overlay" id="successPopup">
+        <div class="popup-message popup-success">
+            <div class="popup-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="popup-title">Success!</h3>
+            <p class="popup-text" id="successPopupText">Operation completed successfully!</p>
+            <button class="popup-btn" id="successPopupBtn">OK</button>
+        </div>
+    </div>
+
+    <div class="popup-overlay" id="errorPopup">
+        <div class="popup-message popup-error">
+            <div class="popup-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h3 class="popup-title">Error!</h3>
+            <p class="popup-text" id="errorPopupText">An error occurred.</p>
+            <button class="popup-btn" id="errorPopupBtn">OK</button>
+        </div>
+    </div>
 
     <!-- Hero / Search Section -->
     <section class="hero">
@@ -621,7 +765,7 @@
 
     <!-- Quick Actions -->
     <section class="quick-actions">
-        <a href="createtrip.html" class="action-btn">
+        <a href="create-trip.html" class="action-btn">
             <div class="action-icon">
                 <i class="fas fa-plus"></i>
             </div>
@@ -815,6 +959,58 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            const profileDropdown = document.getElementById('profileDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const successPopup = document.getElementById('successPopup');
+            const errorPopup = document.getElementById('errorPopup');
+            
+            // Profile dropdown functionality
+            profileDropdown.addEventListener('click', function() {
+                dropdownMenu.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!profileDropdown.contains(event.target)) {
+                    dropdownMenu.classList.remove('active');
+                }
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await logoutUser();
+            });
+            
+            // Popup buttons
+            document.getElementById('successPopupBtn').addEventListener('click', function() {
+                successPopup.style.display = 'none';
+            });
+            
+            document.getElementById('errorPopupBtn').addEventListener('click', function() {
+                errorPopup.style.display = 'none';
+            });
+            
+            async function logoutUser() {
+                try {
+                    const { error } = await supabase.auth.signOut();
+                    
+                    if (error) {
+                        console.error('Error signing out:', error);
+                        showErrorPopup('Error logging out');
+                        return;
+                    }
+                    
+                    // Redirect to login page
+                    window.location.href = 'login.html';
+                    
+                } catch (error) {
+                    console.error('Error during logout:', error);
+                    showErrorPopup('An error occurred during logout');
+                }
+            }
+            
             // Initialize the page
             initializePage();
 
@@ -834,6 +1030,9 @@
                         return;
                     }
 
+                    // Update profile avatar with user initials
+                    await updateProfileAvatar(user.id);
+
                     // User is logged in, load real data
                     await loadActiveTrips();
                     
@@ -841,6 +1040,34 @@
                     console.error('Error initializing page:', error);
                     loadDefaultTrips();
                 }
+            }
+            
+            // Update profile avatar with user initials
+            async function updateProfileAvatar(authId) {
+                try {
+                    const { data: userData, error } = await supabase
+                        .from('users')
+                        .select('full_name')
+                        .eq('auth_id', authId)
+                        .single();
+                    
+                    if (!error && userData) {
+                        const initials = getInitials(userData.full_name);
+                        document.getElementById('navAvatar').textContent = initials;
+                    }
+                } catch (error) {
+                    console.error('Error updating profile avatar:', error);
+                }
+            }
+            
+            function getInitials(fullName) {
+                if (!fullName) return 'US';
+                return fullName
+                    .split(' ')
+                    .map(name => name[0])
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
             }
 
             async function loadActiveTrips() {
@@ -1050,14 +1277,14 @@
                 }
             }
 
-            function getInitials(name) {
-                if (!name) return 'US';
-                return name
-                    .split(' ')
-                    .map(word => word[0])
-                    .join('')
-                    .toUpperCase()
-                    .substring(0, 2);
+            function showSuccessPopup(message) {
+                document.getElementById('successPopupText').textContent = message;
+                successPopup.style.display = 'flex';
+            }
+            
+            function showErrorPopup(message) {
+                document.getElementById('errorPopupText').textContent = message;
+                errorPopup.style.display = 'flex';
             }
 
             // Make viewTripDetails available globally
