@@ -626,6 +626,105 @@
             background-color: #D1D5DB;
         }
 
+        /* Seat Selection Styles */
+        .seat-selection {
+            margin: 1.5rem 0;
+        }
+
+        .seat-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .seat-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .seat-option {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .seat-option:hover {
+            border-color: var(--primary);
+        }
+
+        .seat-option.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .seat-option.disabled {
+            background-color: #F3F4F6;
+            color: #D1D5DB;
+            cursor: not-allowed;
+            border-color: #E5E7EB;
+        }
+
+        .seat-option.disabled:hover {
+            border-color: #E5E7EB;
+        }
+
+        .price-summary {
+            background-color: #F8FAFC;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        /* Message Input */
+        .message-input {
+            margin-top: 1.5rem;
+        }
+
+        .message-input label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .message-input textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Inter', sans-serif;
+        }
+
         /* Loading State */
         .loading {
             display: flex;
@@ -846,6 +945,29 @@
         </div>
     </div>
 
+    <!-- Booking Request Modal -->
+    <div class="modal" id="bookingRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Request to Join Trip</h3>
+                <button class="close-modal" id="closeBookingModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="bookingModalBody">
+                <!-- Booking request form will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelBookingRequest">
+                    Cancel
+                </button>
+                <button class="btn btn-primary" id="sendBookingRequest">
+                    <i class="fas fa-paper-plane"></i> Send Request
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item">
@@ -901,6 +1023,7 @@
             let tripsData = [];
             let markers = [];
             let currentSelectedTrip = null;
+            let selectedSeats = 1;
             let activeFilters = {
                 vehicle: [],
                 seats: [],
@@ -1056,7 +1179,20 @@
                 });
                 
                 // Request booking
-                document.getElementById('requestBooking').addEventListener('click', requestBooking);
+                document.getElementById('requestBooking').addEventListener('click', showBookingRequestModal);
+
+                // Booking modal close
+                document.getElementById('closeBookingModal').addEventListener('click', function() {
+                    document.getElementById('bookingRequestModal').style.display = 'none';
+                });
+                
+                // Cancel booking request
+                document.getElementById('cancelBookingRequest').addEventListener('click', function() {
+                    document.getElementById('bookingRequestModal').style.display = 'none';
+                });
+                
+                // Send booking request
+                document.getElementById('sendBookingRequest').addEventListener('click', sendBookingRequest);
 
                 // Close filter panel when clicking outside
                 document.addEventListener('click', function(event) {
@@ -1451,7 +1587,106 @@
                 document.getElementById('tripDetailsModal').style.display = 'flex';
             }
 
-            async function requestBooking() {
+            function showBookingRequestModal() {
+                if (!currentSelectedTrip) return;
+                
+                // Reset selected seats to 1
+                selectedSeats = 1;
+                
+                const modalBody = document.getElementById('bookingModalBody');
+                const pricePerSeat = currentSelectedTrip.price_per_seat || currentSelectedTrip.total_price;
+                const totalPrice = pricePerSeat * selectedSeats;
+                
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 1.5rem;">
+                        <div class="route" style="font-size: 1.2rem;">
+                            <i class="fas fa-route"></i>
+                            ${currentSelectedTrip.start_location} → ${currentSelectedTrip.end_location}
+                        </div>
+                        <div class="date-time">
+                            <i class="far fa-calendar"></i>
+                            ${formatDateTime(currentSelectedTrip.departure_datetime)}
+                        </div>
+                    </div>
+                    
+                    <div class="seat-selection">
+                        <div class="seat-title">Select Number of Seats</div>
+                        <div class="seat-options" id="seatOptions">
+                            ${generateSeatOptions(currentSelectedTrip.seats_available)}
+                        </div>
+                        
+                        <div class="price-summary">
+                            <div class="price-row">
+                                <span>Price per seat:</span>
+                                <span>₹${pricePerSeat}</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Number of seats:</span>
+                                <span id="selectedSeatsCount">${selectedSeats}</span>
+                            </div>
+                            <div class="price-total">
+                                <span>Total Amount:</span>
+                                <span id="totalPrice">₹${totalPrice}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="message-input">
+                        <label for="requestMessage">Message to Driver (Optional)</label>
+                        <textarea id="requestMessage" placeholder="Add a message to the driver..."></textarea>
+                    </div>
+                `;
+                
+                // Add event listeners to seat options
+                document.querySelectorAll('.seat-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        if (this.classList.contains('disabled')) return;
+                        
+                        // Remove selected class from all options
+                        document.querySelectorAll('.seat-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        
+                        // Add selected class to clicked option
+                        this.classList.add('selected');
+                        
+                        // Update selected seats
+                        selectedSeats = parseInt(this.getAttribute('data-seats'));
+                        
+                        // Update price summary
+                        updatePriceSummary(pricePerSeat, selectedSeats);
+                    });
+                });
+                
+                // Close trip details modal and open booking request modal
+                document.getElementById('tripDetailsModal').style.display = 'none';
+                document.getElementById('bookingRequestModal').style.display = 'flex';
+            }
+
+            function generateSeatOptions(maxSeats) {
+                let options = '';
+                for (let i = 1; i <= Math.min(maxSeats, 6); i++) {
+                    const isSelected = i === 1 ? 'selected' : '';
+                    options += `<div class="seat-option ${isSelected}" data-seats="${i}">${i}</div>`;
+                }
+                
+                // Add disabled options if max seats is more than 6
+                if (maxSeats > 6) {
+                    for (let i = 7; i <= maxSeats; i++) {
+                        options += `<div class="seat-option disabled" data-seats="${i}">${i}</div>`;
+                    }
+                }
+                
+                return options;
+            }
+
+            function updatePriceSummary(pricePerSeat, seats) {
+                const totalPrice = pricePerSeat * seats;
+                document.getElementById('selectedSeatsCount').textContent = seats;
+                document.getElementById('totalPrice').textContent = `₹${totalPrice}`;
+            }
+
+            async function sendBookingRequest() {
                 if (!currentSelectedTrip) return;
                 
                 try {
@@ -1472,10 +1707,13 @@
                     if (userError) throw userError;
 
                     // Check if seats are still available
-                    if (currentSelectedTrip.seats_available < 1) {
-                        showError('No seats available for this trip');
+                    if (currentSelectedTrip.seats_available < selectedSeats) {
+                        showError('Not enough seats available for this trip');
                         return;
                     }
+
+                    // Get message
+                    const message = document.getElementById('requestMessage').value || 'I would like to join this trip';
 
                     // Create booking request
                     const { data: request, error } = await supabase
@@ -1483,19 +1721,19 @@
                         .insert([{
                             trip_id: currentSelectedTrip.id,
                             passenger_id: userData.id,
-                            seats_requested: 1,
+                            seats_requested: selectedSeats,
                             status: 'pending',
-                            message: 'I would like to join this trip'
+                            message: message
                         }])
                         .select();
 
                     if (error) throw error;
 
                     // Show success message
-                    alert('Booking request sent successfully! The driver will review your request.');
+                    alert(`Booking request for ${selectedSeats} seat(s) sent successfully! The driver will review your request.`);
                     
                     // Close modal
-                    document.getElementById('tripDetailsModal').style.display = 'none';
+                    document.getElementById('bookingRequestModal').style.display = 'none';
                     
                     // Refresh trips to update available seats
                     loadAllActiveTrips();
